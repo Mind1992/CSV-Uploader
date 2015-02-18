@@ -1,0 +1,33 @@
+<% if user_signed_in? %>
+  <div class="container">
+    <div class="col-xs-12">
+      <h1 class="text-uppercase text-center">Upload CSV file</h1>
+    </div>
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>File name</th>
+          <th>Gross</th>
+        </tr>
+      </thead>
+      <% @documents.each do |doc| %>
+        <tbody>
+          <tr>
+            <td><%= doc.document_name %></td>
+            <td>$<%= doc.gross_revenue_by_document %></td>
+          </tr>
+        </tbody>
+      <% end %>
+    </table>
+    <%= form_tag upload_purchases_path, multipart: true do %>
+    <div class="col-xs-offset-3 col-xs-6 col-xs-offset-3 col-sm-offset-4 col-sm-4 col-sm-offset-4" id="upload-wrapper">
+      <%= file_field_tag :file, id: 'file-filed' %>
+    </div>
+    <div class="col-xs-12 text-center">
+      <%= submit_tag "Upload", class: "btn", id: "main-search-btn" %>
+    </div>
+    <% end %>
+<% else %>
+  <h2 class="text-uppercase text-center">Upload your CSV files effortlesly</h2>
+  </div>
+<% end %>

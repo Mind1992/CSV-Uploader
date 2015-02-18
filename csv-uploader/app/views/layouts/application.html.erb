@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html class="all">
+<head>
+  <title>CsvUploader</title>
+  <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track' => true %>
+  <%= javascript_include_tag 'application', 'data-turbolinks-track' => true %>
+  <%= csrf_meta_tags %>
+</head>
+<body>
+  <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container-fluid">
+      <div class="row">
+          <%= link_to "CSVuploader", root_path, id: "logo-all" %>
+        <% if user_signed_in? %>
+          <div class="col-xs-6 col-sm-6 col-md-5" id="guest-links">
+            Logged in as <strong><%= current_user.email %></strong>
+            <%= link_to 'Edit profile', edit_user_registration_path, class: "all-links"%>
+            <%= link_to "Log Out", destroy_user_session_path, method: :delete, class: "all-links", id: "logout-link" %>
+          </div>
+        <% else %>
+          <div class="col-xs-6 col-sm-5 col-md-5" id="guest-links">
+            <%= link_to "Sign Up", new_user_registration_path, class: "all-links" %>
+            <%= link_to "Log In", new_user_session_path, class: "all-links" %>
+            <%= link_to "Sign in with Github", user_omniauth_authorize_path(:github), class: "all-links", id: "github-auth" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </nav>
+  <% if notice %>
+    <p class="notice alert alert-success" role="alert"><%= notice %></p>
+  <% elsif alert %>
+    <p class="alert alert-danger" role="alert"><%= alert %></p>
+  <% end %>
+  <%= yield %>
+</body>
+</html>

@@ -1,0 +1,1021 @@
+From a3a742a7149eb2c669d8c649ec55613dbc189bd5 Mon Sep 17 00:00:00 2001
+From: Sergii Mertsalov <sergmerts@gmail.com>
+Date: Mon, 24 Nov 2014 12:30:34 -0800
+Subject: [PATCH 6/8] add authentication with devise and basic styling for the
+ views
+
+---
+ csv-uploader/Gemfile                               |   3 +
+ csv-uploader/Gemfile.lock                          |  18 ++
+ .../app/assets/stylesheets/custom.css.scss         |  58 +++++
+ csv-uploader/app/models/user.rb                    |   6 +
+ .../app/views/devise/confirmations/new.html.erb    |  12 +
+ .../mailer/confirmation_instructions.html.erb      |   5 +
+ .../mailer/reset_password_instructions.html.erb    |   8 +
+ .../devise/mailer/unlock_instructions.html.erb     |   7 +
+ .../app/views/devise/passwords/edit.html.erb       |  16 ++
+ .../app/views/devise/passwords/new.html.erb        |  20 ++
+ .../app/views/devise/registrations/edit.html.erb   |  47 ++++
+ .../app/views/devise/registrations/new.html.erb    |  28 +++
+ .../app/views/devise/sessions/new.html.erb         |  28 +++
+ .../app/views/devise/shared/_links.html.erb        |  29 +++
+ csv-uploader/app/views/devise/unlocks/new.html.erb |  12 +
+ .../app/views/layouts/application.html.erb         |  30 ++-
+ csv-uploader/app/views/purchases/index.html.erb    |  12 +-
+ csv-uploader/config/environments/development.rb    |   2 +-
+ csv-uploader/config/initializers/devise.rb         | 259 +++++++++++++++++++++
+ csv-uploader/config/locales/devise.en.yml          |  60 +++++
+ csv-uploader/config/routes.rb                      |   1 +
+ .../migrate/20141124190255_devise_create_users.rb  |  42 ++++
+ csv-uploader/db/schema.rb                          |  20 +-
+ csv-uploader/spec/models/user_spec.rb              |   5 +
+ 24 files changed, 719 insertions(+), 9 deletions(-)
+ create mode 100644 csv-uploader/app/assets/stylesheets/custom.css.scss
+ create mode 100644 csv-uploader/app/models/user.rb
+ create mode 100644 csv-uploader/app/views/devise/confirmations/new.html.erb
+ create mode 100644 csv-uploader/app/views/devise/mailer/confirmation_instructions.html.erb
+ create mode 100644 csv-uploader/app/views/devise/mailer/reset_password_instructions.html.erb
+ create mode 100644 csv-uploader/app/views/devise/mailer/unlock_instructions.html.erb
+ create mode 100644 csv-uploader/app/views/devise/passwords/edit.html.erb
+ create mode 100644 csv-uploader/app/views/devise/passwords/new.html.erb
+ create mode 100644 csv-uploader/app/views/devise/registrations/edit.html.erb
+ create mode 100644 csv-uploader/app/views/devise/registrations/new.html.erb
+ create mode 100644 csv-uploader/app/views/devise/sessions/new.html.erb
+ create mode 100644 csv-uploader/app/views/devise/shared/_links.html.erb
+ create mode 100644 csv-uploader/app/views/devise/unlocks/new.html.erb
+ create mode 100644 csv-uploader/config/initializers/devise.rb
+ create mode 100644 csv-uploader/config/locales/devise.en.yml
+ create mode 100644 csv-uploader/db/migrate/20141124190255_devise_create_users.rb
+ create mode 100644 csv-uploader/spec/models/user_spec.rb
+
+diff --git a/csv-uploader/Gemfile b/csv-uploader/Gemfile
+index a3e4818..45a149b 100644
+--- a/csv-uploader/Gemfile
++++ b/csv-uploader/Gemfile
+@@ -3,12 +3,15 @@ source 'https://rubygems.org'
+ gem 'rails'
+ gem 'pg'
+ gem 'sass-rails'
++gem 'bootstrap-sass'
++gem 'sprockets'
+ gem 'uglifier'
+ gem 'coffee-rails'
+ gem 'jquery-rails'
+ gem 'turbolinks'
+ gem 'pry'
+ gem 'smarter_csv'
++gem 'devise'
+ 
+ group :development do
+   gem 'better_errors'
+diff --git a/csv-uploader/Gemfile.lock b/csv-uploader/Gemfile.lock
+index 00b645a..838cbee 100644
+--- a/csv-uploader/Gemfile.lock
++++ b/csv-uploader/Gemfile.lock
+@@ -28,12 +28,15 @@ GEM
+       thread_safe (~> 0.1)
+       tzinfo (~> 1.1)
+     arel (5.0.1.20140414130214)
++    bcrypt (3.1.7)
+     better_errors (2.0.0)
+       coderay (>= 1.0.0)
+       erubis (>= 2.6.6)
+       rack (>= 0.9.0)
+     binding_of_caller (0.7.2)
+       debug_inspector (>= 0.0.1)
++    bootstrap-sass (3.2.0.2)
++      sass (~> 3.2)
+     builder (3.2.2)
+     coderay (1.1.0)
+     coffee-rails (4.0.1)
+@@ -44,6 +47,13 @@ GEM
+       execjs
+     coffee-script-source (1.8.0)
+     debug_inspector (0.0.2)
++    devise (3.4.0)
++      bcrypt (~> 3.0)
++      orm_adapter (~> 0.1)
++      railties (>= 3.2.6, < 5)
++      responders
++      thread_safe (~> 0.1)
++      warden (~> 1.2.3)
+     diff-lcs (1.2.5)
+     erubis (2.7.0)
+     execjs (2.2.2)
+@@ -59,6 +69,7 @@ GEM
+     mime-types (2.4.3)
+     minitest (5.4.3)
+     multi_json (1.10.1)
++    orm_adapter (0.5.0)
+     pg (0.17.1)
+     pry (0.10.1)
+       coderay (~> 1.1.0)
+@@ -85,6 +96,8 @@ GEM
+       rake (>= 0.8.7)
+       thor (>= 0.18.1, < 2.0)
+     rake (10.3.2)
++    responders (1.1.1)
++      railties (>= 3.2, < 4.2)
+     rspec-core (3.1.5)
+       rspec-support (~> 3.1.0)
+     rspec-expectations (3.1.2)
+@@ -130,6 +143,8 @@ GEM
+     uglifier (2.5.3)
+       execjs (>= 0.3.0)
+       json (>= 1.8.0)
++    warden (1.2.3)
++      rack (>= 1.0)
+ 
+ PLATFORMS
+   ruby
+@@ -137,7 +152,9 @@ PLATFORMS
+ DEPENDENCIES
+   better_errors
+   binding_of_caller
++  bootstrap-sass
+   coffee-rails
++  devise
+   jquery-rails
+   pg
+   pry
+@@ -147,5 +164,6 @@ DEPENDENCIES
+   sass-rails
+   shoulda-matchers
+   smarter_csv
++  sprockets
+   turbolinks
+   uglifier
+diff --git a/csv-uploader/app/assets/stylesheets/custom.css.scss b/csv-uploader/app/assets/stylesheets/custom.css.scss
+new file mode 100644
+index 0000000..744bbb7
+--- /dev/null
++++ b/csv-uploader/app/assets/stylesheets/custom.css.scss
+@@ -0,0 +1,58 @@
++@import "bootstrap";
++
++body {
++  padding-top: 100px;
++}
++
++.check_label {
++  margin-left: 5px;
++}
++
++.all-links {
++  color: #607080;
++  text-decoration: none !important;
++}
++
++#logo-all {
++    color: #ff5a5f;
++    font-size: 2.3em;
++    letter-spacing: -1px;
++    margin-left: 20px;
++    font-weight: bold;
++    font-family: "Istok Web", sans-serif;
++    text-decoration: none;
++    display: inline-block;
++    float: left;
++    margin-top: 10px;
++  }
++
++  #guest-links {
++    position: absolute;
++    top: 0;
++    right: 0;
++    margin-top: 15px;
++    font-size: 1.3em;
++  }
++
++  #guest-links a:nth-child(1) {
++    margin-left: 20%;
++  }
++
++  .all-links:nth-child(2) {
++    margin-left: 1em;
++  }
++
++  #main-search-btn {
++    font-size: 1.3em;
++    height: 3em;
++    width: 11%;
++    border-color: #ff5a5f;
++    border-bottom-color: #e00007;
++    background-color: #ff5a5f;
++    color: #fff;
++  }
++
++  #upload-wrapper {
++  display: inline-block;
++  margin-top: 10%;
++}
+diff --git a/csv-uploader/app/models/user.rb b/csv-uploader/app/models/user.rb
+new file mode 100644
+index 0000000..c822027
+--- /dev/null
++++ b/csv-uploader/app/models/user.rb
+@@ -0,0 +1,6 @@
++class User < ActiveRecord::Base
++  # Include default devise modules. Others available are:
++  # :confirmable, :lockable, :timeoutable and :omniauthable
++  devise :database_authenticatable, :registerable,
++         :recoverable, :rememberable, :trackable, :validatable
++end
+diff --git a/csv-uploader/app/views/devise/confirmations/new.html.erb b/csv-uploader/app/views/devise/confirmations/new.html.erb
+new file mode 100644
+index 0000000..65ba288
+--- /dev/null
++++ b/csv-uploader/app/views/devise/confirmations/new.html.erb
+@@ -0,0 +1,12 @@
++<h2>Resend confirmation instructions</h2>
++
++<%= form_for(resource, as: resource_name, url: confirmation_path(resource_name), html: { method: :post }) do |f| %>
++  <%= devise_error_messages! %>
++
++  <div><%= f.label :email %><br />
++  <%= f.email_field :email, autofocus: true %></div>
++
++  <div><%= f.submit "Resend confirmation instructions" %></div>
++<% end %>
++
++<%= render "devise/shared/links" %>
+diff --git a/csv-uploader/app/views/devise/mailer/confirmation_instructions.html.erb b/csv-uploader/app/views/devise/mailer/confirmation_instructions.html.erb
+new file mode 100644
+index 0000000..dc55f64
+--- /dev/null
++++ b/csv-uploader/app/views/devise/mailer/confirmation_instructions.html.erb
+@@ -0,0 +1,5 @@
++<p>Welcome <%= @email %>!</p>
++
++<p>You can confirm your account email through the link below:</p>
++
++<p><%= link_to 'Confirm my account', confirmation_url(@resource, confirmation_token: @token) %></p>
+diff --git a/csv-uploader/app/views/devise/mailer/reset_password_instructions.html.erb b/csv-uploader/app/views/devise/mailer/reset_password_instructions.html.erb
+new file mode 100644
+index 0000000..f667dc1
+--- /dev/null
++++ b/csv-uploader/app/views/devise/mailer/reset_password_instructions.html.erb
+@@ -0,0 +1,8 @@
++<p>Hello <%= @resource.email %>!</p>
++
++<p>Someone has requested a link to change your password. You can do this through the link below.</p>
++
++<p><%= link_to 'Change my password', edit_password_url(@resource, reset_password_token: @token) %></p>
++
++<p>If you didn't request this, please ignore this email.</p>
++<p>Your password won't change until you access the link above and create a new one.</p>
+diff --git a/csv-uploader/app/views/devise/mailer/unlock_instructions.html.erb b/csv-uploader/app/views/devise/mailer/unlock_instructions.html.erb
+new file mode 100644
+index 0000000..41e148b
+--- /dev/null
++++ b/csv-uploader/app/views/devise/mailer/unlock_instructions.html.erb
+@@ -0,0 +1,7 @@
++<p>Hello <%= @resource.email %>!</p>
++
++<p>Your account has been locked due to an excessive number of unsuccessful sign in attempts.</p>
++
++<p>Click the link below to unlock your account:</p>
++
++<p><%= link_to 'Unlock my account', unlock_url(@resource, unlock_token: @token) %></p>
+diff --git a/csv-uploader/app/views/devise/passwords/edit.html.erb b/csv-uploader/app/views/devise/passwords/edit.html.erb
+new file mode 100644
+index 0000000..5535098
+--- /dev/null
++++ b/csv-uploader/app/views/devise/passwords/edit.html.erb
+@@ -0,0 +1,16 @@
++<h2>Change your password</h2>
++
++<%= form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :put }) do |f| %>
++  <%= devise_error_messages! %>
++  <%= f.hidden_field :reset_password_token %>
++
++  <div><%= f.label :password, "New password" %><br />
++    <%= f.password_field :password, autofocus: true, autocomplete: "off" %></div>
++
++  <div><%= f.label :password_confirmation, "Confirm new password" %><br />
++    <%= f.password_field :password_confirmation, autocomplete: "off" %></div>
++
++  <div><%= f.submit "Change my password" %></div>
++<% end %>
++
++<%= render "devise/shared/links" %>
+diff --git a/csv-uploader/app/views/devise/passwords/new.html.erb b/csv-uploader/app/views/devise/passwords/new.html.erb
+new file mode 100644
+index 0000000..c19c82c
+--- /dev/null
++++ b/csv-uploader/app/views/devise/passwords/new.html.erb
+@@ -0,0 +1,20 @@
++<div class="container-fluid center_div">
++  <h2 class="col-sm-offset-3 col-sm-6 text-center">Forgot your password?</h2>
++
++<%= form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :post, role: "form", class: "form-horizontal" }) do |f| %>
++  <%= devise_error_messages! %>
++
++  <div class="form-group">
++    <div class="col-sm-offset-3 col-sm-6">
++      <%= f.email_field :email, autofocus: true, class: "form-control", placeholder: "Enter your email" %>
++    </div>
++  </div>
++  <div class="form-group">
++    <div class="col-sm-offset-3 col-sm-6 text-center">
++      <%= f.submit "Send me reset password instructions", class: "btn btn-primary" %>
++    </div>
++  </div>
++<% end %>
++</div>
++
++<%= render "devise/shared/links" %>
+diff --git a/csv-uploader/app/views/devise/registrations/edit.html.erb b/csv-uploader/app/views/devise/registrations/edit.html.erb
+new file mode 100644
+index 0000000..295929c
+--- /dev/null
++++ b/csv-uploader/app/views/devise/registrations/edit.html.erb
+@@ -0,0 +1,47 @@
++<div class="container-fluid center_div">
++<h2 class="col-sm-offset-3 col-sm-6 text-center">Edit <%= resource_name.to_s.humanize %></h2>
++
++<%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { method: :put, role: "form", class: "form-horizontal" }) do |f| %>
++  <%= devise_error_messages! %>
++  <div class="form-group">
++    <div class="col-sm-offset-3 col-sm-6">
++      <%= f.email_field :email, autofocus: true, class: "form-control", placeholder: "Email" %>
++    </div>
++  </div>
++
++  <% if devise_mapping.confirmable? && resource.pending_reconfirmation? %>
++    <div>Currently waiting confirmation for: <%= resource.unconfirmed_email %></div>
++  <% end %>
++
++  <div class="form-group">
++    <div class="col-sm-offset-3 col-sm-6">
++      <%= f.password_field :current_password, autocomplete: "off", class: "form-control", placeholder: "Current password" %>
++    </div>
++  </div>
++
++  <div class="form-group">
++    <div class="col-sm-offset-3 col-sm-6">
++      <%= f.password_field :password, autocomplete: "off", class: "form-control", placeholder: "New password" %>
++    </div>
++  </div>
++
++  <div class="form-group">
++    <div class="col-sm-offset-3 col-sm-6">
++      <%= f.password_field :password_confirmation, autocomplete: "off", class: "form-control", placeholder: "Confirm password" %>
++    </div>
++  </div>
++
++  <div class="form-group">
++    <div class="col-sm-offset-3 col-sm-6 text-center">
++      <%= f.submit "Update", class: "btn btn-info" %>
++    </div>
++  </div>
++<% end %>
++
++  <div class="form-group">
++    <div class="col-sm-offset-3 col-sm-6 text-center">
++      <%= button_to "Cancel my account", registration_path(resource_name), data: { confirm: "Are you sure?" }, method: :delete, class: "btn btn-danger" %>
++    </div>
++  </div>
++
++</div>
+diff --git a/csv-uploader/app/views/devise/registrations/new.html.erb b/csv-uploader/app/views/devise/registrations/new.html.erb
+new file mode 100644
+index 0000000..6c226cb
+--- /dev/null
++++ b/csv-uploader/app/views/devise/registrations/new.html.erb
+@@ -0,0 +1,28 @@
++<div class="container-fluid center_div">
++<h2 class="col-sm-offset-3 col-sm-6 text-center">Sign up</h2>
++
++<%= form_for(resource, as: resource_name, url: registration_path(resource_name), :html => { role: "form", class: "form-horizontal"}) do |f| %>
++  <%= devise_error_messages! %>
++  <div class="form-group">
++    <div class="col-sm-offset-3 col-sm-6">
++      <%= f.email_field :email, class: "form-control", placeholder: "Email" %>
++    </div>
++  </div>
++  <div class="form-group">
++    <div class="col-sm-offset-3 col-sm-6">
++      <%= f.password_field :password, autocomplete: "off", class: "form-control", placeholder: "Password" %>
++    </div>
++  </div>
++  <div class="form-group">
++    <div class="col-sm-offset-3 col-sm-6">
++      <%= f.password_field :password_confirmation, autocomplete: "off", class: "form-control", placeholder: "Password confirmation"  %>
++    </div>
++  </div>
++  <div class="form-group">
++    <div class="col-sm-offset-3 col-sm-6 text-center">
++      <%= f.submit "Sign up", class: "btn btn-default" %>
++    </div>
++  </div>
++  <% end %>
++</div>
++<%= render "devise/shared/links" %>
+diff --git a/csv-uploader/app/views/devise/sessions/new.html.erb b/csv-uploader/app/views/devise/sessions/new.html.erb
+new file mode 100644
+index 0000000..02dcc0b
+--- /dev/null
++++ b/csv-uploader/app/views/devise/sessions/new.html.erb
+@@ -0,0 +1,28 @@
++<div class="container-fluid center_div">
++  <h2 class="col-sm-offset-3 col-sm-6 text-center">Login</h2>
++
++  <%= form_for(resource, as: resource_name, url: session_path(resource_name), :html => { role: "form", class: "form-horizontal"}) do |f| %>
++    <div class="form-group">
++      <div class="col-sm-offset-3 col-sm-6">
++        <%= f.text_field :email, autofocus: true, class: "form-control", placeholder: "Email" %>
++      </div>
++    </div>
++
++    <div class="form-group">
++      <div class="col-sm-offset-3 col-sm-6">
++        <%= f.password_field :password, autocomplete: "off", class: "form-control", placeholder: "Password" %>
++        <% if devise_mapping.rememberable? -%>
++          <%= f.check_box :remember_me %><%= f.label :remember_me, class: "check_label" %>
++        <% end -%>
++      </div>
++    </div>
++
++    <div class="form-group">
++      <div class="col-sm-offset-3 col-sm-6 text-center">
++        <%= f.submit "Login", class: "btn btn-default" %>
++      </div>
++     </div>
++  <% end %>
++</div>
++
++<%= render "devise/shared/links" %>
+diff --git a/csv-uploader/app/views/devise/shared/_links.html.erb b/csv-uploader/app/views/devise/shared/_links.html.erb
+new file mode 100644
+index 0000000..07e4291
+--- /dev/null
++++ b/csv-uploader/app/views/devise/shared/_links.html.erb
+@@ -0,0 +1,29 @@
++<%#- if controller_name != 'sessions' %>
++  <%#= link_to "Log in", new_session_path(resource_name) %> <%#<br />%>
++<%# end -%>
++
++<%#- if devise_mapping.registerable? && controller_name != 'registrations' %>
++  <%#= link_to "Sign up", new_registration_path(resource_name) %><br />
++<%# end -%>
++
++<%- if devise_mapping.recoverable? && controller_name != 'passwords' && controller_name != 'registrations' %>
++<div class="form-group">
++    <div class="col-sm-offset-3 col-sm-6 text-center">
++      <%= link_to "Forgot your password?", new_password_path(resource_name), class: "col-sm-offset-3 col-sm-6 forgot_pass" %>
++    </div>
++</div>
++<% end -%>
++
++<%- if devise_mapping.confirmable? && controller_name != 'confirmations' %>
++  <%= link_to "Didn't receive confirmation instructions?", new_confirmation_path(resource_name) %><br />
++<% end -%>
++
++<%- if devise_mapping.lockable? && resource_class.unlock_strategy_enabled?(:email) && controller_name != 'unlocks' %>
++  <%= link_to "Didn't receive unlock instructions?", new_unlock_path(resource_name) %><br />
++<% end -%>
++
++<%- if devise_mapping.omniauthable? %>
++  <%- resource_class.omniauth_providers.each do |provider| %>
++    <%= link_to "Sign in with #{provider.to_s.titleize}", omniauth_authorize_path(resource_name, provider) %><br />
++  <% end -%>
++<% end -%>
+diff --git a/csv-uploader/app/views/devise/unlocks/new.html.erb b/csv-uploader/app/views/devise/unlocks/new.html.erb
+new file mode 100644
+index 0000000..6fb5612
+--- /dev/null
++++ b/csv-uploader/app/views/devise/unlocks/new.html.erb
+@@ -0,0 +1,12 @@
++<h2>Resend unlock instructions</h2>
++
++<%= form_for(resource, as: resource_name, url: unlock_path(resource_name), html: { method: :post }) do |f| %>
++  <%= devise_error_messages! %>
++
++  <div><%= f.label :email %><br />
++  <%= f.email_field :email, autofocus: true %></div>
++
++  <div><%= f.submit "Resend unlock instructions" %></div>
++<% end %>
++
++<%= render "devise/shared/links" %>
+diff --git a/csv-uploader/app/views/layouts/application.html.erb b/csv-uploader/app/views/layouts/application.html.erb
+index 637e54c..48db4ec 100644
+--- a/csv-uploader/app/views/layouts/application.html.erb
++++ b/csv-uploader/app/views/layouts/application.html.erb
+@@ -1,5 +1,5 @@
+ <!DOCTYPE html>
+-<html>
++<html class="all">
+ <head>
+   <title>CsvUploader</title>
+   <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track' => true %>
+@@ -7,8 +7,30 @@
+   <%= csrf_meta_tags %>
+ </head>
+ <body>
+-
+-<%= yield %>
+-
++  <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
++    <div class="container-fluid">
++      <div class="row">
++          <%= link_to "CSVuploader", root_path, id: "logo-all" %>
++        <% if user_signed_in? %>
++          <div class="col-xs-6 col-sm-6 col-md-5" id="guest-links">
++            Logged in as <strong><%= current_user.email %></strong>
++            <%= link_to 'Edit profile', edit_user_registration_path, class: "all-links"%>
++            <%= link_to "Log Out", destroy_user_session_path, method: :delete, class: "all-links"%>
++          </div>
++        <% else %>
++          <div class="col-xs-6 col-sm-4 col-md-3" id="guest-links">
++            <%= link_to "Sign Up", new_user_registration_path, class: "all-links" %>
++            <%= link_to "Log In", new_user_session_path, class: "all-links" %>
++          </div>
++        <% end %>
++      </div>
++    </div>
++  </nav>
++  <% if notice %>
++    <p class="notice alert alert-success" role="alert"><%= notice %></p>
++  <% elsif alert %>
++    <p class="alert alert-danger" role="alert"><%= alert %></p>
++  <% end %>
++  <%= yield %>
+ </body>
+ </html>
+diff --git a/csv-uploader/app/views/purchases/index.html.erb b/csv-uploader/app/views/purchases/index.html.erb
+index 789a168..66eebae 100644
+--- a/csv-uploader/app/views/purchases/index.html.erb
++++ b/csv-uploader/app/views/purchases/index.html.erb
+@@ -1,10 +1,16 @@
+-<h2>Upload CSV file</h2>
++<div class="col-xs-12">
++  <h1 class="text-uppercase text-center">Upload CSV file</h1>
++</div>
+ <% @documents.each do |doc| %>
+   <%= doc.document_name %>
+   $<%= doc.gross_revenue_by_document %>
+ <% end %>
+ 
+ <%= form_tag upload_purchases_path, multipart: true do %>
+-  <%= file_field_tag :file %>
+-  <%= submit_tag "Upload" %>
++<div class="col-xs-offset-3 col-xs-6 col-xs-offset-3 col-sm-offset-4 col-sm-4 col-sm-offset-4" id="upload-wrapper">
++  <%= file_field_tag :file, id: 'file-filed' %>
++</div>
++<div class="col-xs-12 text-center">
++  <%= submit_tag "Upload", class: "btn", id: "main-search-btn" %>
++</div>
+ <% end %>
+diff --git a/csv-uploader/config/environments/development.rb b/csv-uploader/config/environments/development.rb
+index ddf0e90..1d1fe43 100644
+--- a/csv-uploader/config/environments/development.rb
++++ b/csv-uploader/config/environments/development.rb
+@@ -1,6 +1,6 @@
+ Rails.application.configure do
+   # Settings specified here will take precedence over those in config/application.rb.
+-
++  config.action_mailer.default_url_options = { host: 'localhost', port: 3000 }
+   # In the development environment your application's code is reloaded on
+   # every request. This slows down response time but is perfect for development
+   # since you don't have to restart the web server when you make code changes.
+diff --git a/csv-uploader/config/initializers/devise.rb b/csv-uploader/config/initializers/devise.rb
+new file mode 100644
+index 0000000..de500b4
+--- /dev/null
++++ b/csv-uploader/config/initializers/devise.rb
+@@ -0,0 +1,259 @@
++# Use this hook to configure devise mailer, warden hooks and so forth.
++# Many of these configuration options can be set straight in your model.
++Devise.setup do |config|
++  # The secret key used by Devise. Devise uses this key to generate
++  # random tokens. Changing this key will render invalid all existing
++  # confirmation, reset password and unlock tokens in the database.
++  # config.secret_key = '36d371b86b4bbf7ca4e42c4ace791e4aa528b2fd9c1348d376388517f26fce1f2359aa4308a20d0f6ff7e777c42fe32d0829f297390e57e0b87761c6b9cb82e6'
++
++  # ==> Mailer Configuration
++  # Configure the e-mail address which will be shown in Devise::Mailer,
++  # note that it will be overwritten if you use your own mailer class
++  # with default "from" parameter.
++  config.mailer_sender = 'please-change-me-at-config-initializers-devise@example.com'
++
++  # Configure the class responsible to send e-mails.
++  # config.mailer = 'Devise::Mailer'
++
++  # ==> ORM configuration
++  # Load and configure the ORM. Supports :active_record (default) and
++  # :mongoid (bson_ext recommended) by default. Other ORMs may be
++  # available as additional gems.
++  require 'devise/orm/active_record'
++
++  # ==> Configuration for any authentication mechanism
++  # Configure which keys are used when authenticating a user. The default is
++  # just :email. You can configure it to use [:username, :subdomain], so for
++  # authenticating a user, both parameters are required. Remember that those
++  # parameters are used only when authenticating and not when retrieving from
++  # session. If you need permissions, you should implement that in a before filter.
++  # You can also supply a hash where the value is a boolean determining whether
++  # or not authentication should be aborted when the value is not present.
++  # config.authentication_keys = [ :email ]
++
++  # Configure parameters from the request object used for authentication. Each entry
++  # given should be a request method and it will automatically be passed to the
++  # find_for_authentication method and considered in your model lookup. For instance,
++  # if you set :request_keys to [:subdomain], :subdomain will be used on authentication.
++  # The same considerations mentioned for authentication_keys also apply to request_keys.
++  # config.request_keys = []
++
++  # Configure which authentication keys should be case-insensitive.
++  # These keys will be downcased upon creating or modifying a user and when used
++  # to authenticate or find a user. Default is :email.
++  config.case_insensitive_keys = [ :email ]
++
++  # Configure which authentication keys should have whitespace stripped.
++  # These keys will have whitespace before and after removed upon creating or
++  # modifying a user and when used to authenticate or find a user. Default is :email.
++  config.strip_whitespace_keys = [ :email ]
++
++  # Tell if authentication through request.params is enabled. True by default.
++  # It can be set to an array that will enable params authentication only for the
++  # given strategies, for example, `config.params_authenticatable = [:database]` will
++  # enable it only for database (email + password) authentication.
++  # config.params_authenticatable = true
++
++  # Tell if authentication through HTTP Auth is enabled. False by default.
++  # It can be set to an array that will enable http authentication only for the
++  # given strategies, for example, `config.http_authenticatable = [:database]` will
++  # enable it only for database authentication. The supported strategies are:
++  # :database      = Support basic authentication with authentication key + password
++  # config.http_authenticatable = false
++
++  # If 401 status code should be returned for AJAX requests. True by default.
++  # config.http_authenticatable_on_xhr = true
++
++  # The realm used in Http Basic Authentication. 'Application' by default.
++  # config.http_authentication_realm = 'Application'
++
++  # It will change confirmation, password recovery and other workflows
++  # to behave the same regardless if the e-mail provided was right or wrong.
++  # Does not affect registerable.
++  # config.paranoid = true
++
++  # By default Devise will store the user in session. You can skip storage for
++  # particular strategies by setting this option.
++  # Notice that if you are skipping storage for all authentication paths, you
++  # may want to disable generating routes to Devise's sessions controller by
++  # passing skip: :sessions to `devise_for` in your config/routes.rb
++  config.skip_session_storage = [:http_auth]
++
++  # By default, Devise cleans up the CSRF token on authentication to
++  # avoid CSRF token fixation attacks. This means that, when using AJAX
++  # requests for sign in and sign up, you need to get a new CSRF token
++  # from the server. You can disable this option at your own risk.
++  # config.clean_up_csrf_token_on_authentication = true
++
++  # ==> Configuration for :database_authenticatable
++  # For bcrypt, this is the cost for hashing the password and defaults to 10. If
++  # using other encryptors, it sets how many times you want the password re-encrypted.
++  #
++  # Limiting the stretches to just one in testing will increase the performance of
++  # your test suite dramatically. However, it is STRONGLY RECOMMENDED to not use
++  # a value less than 10 in other environments. Note that, for bcrypt (the default
++  # encryptor), the cost increases exponentially with the number of stretches (e.g.
++  # a value of 20 is already extremely slow: approx. 60 seconds for 1 calculation).
++  config.stretches = Rails.env.test? ? 1 : 10
++
++  # Setup a pepper to generate the encrypted password.
++  # config.pepper = 'df36fdffc1c30236f4962b18e0f8359d609085df811eba83ecb5a94384c3dd263074c65bbcc117cccc97a6aceceb53e8da70354f354e9fbd0f5b6b39da670a7b'
++
++  # ==> Configuration for :confirmable
++  # A period that the user is allowed to access the website even without
++  # confirming their account. For instance, if set to 2.days, the user will be
++  # able to access the website for two days without confirming their account,
++  # access will be blocked just in the third day. Default is 0.days, meaning
++  # the user cannot access the website without confirming their account.
++  # config.allow_unconfirmed_access_for = 2.days
++
++  # A period that the user is allowed to confirm their account before their
++  # token becomes invalid. For example, if set to 3.days, the user can confirm
++  # their account within 3 days after the mail was sent, but on the fourth day
++  # their account can't be confirmed with the token any more.
++  # Default is nil, meaning there is no restriction on how long a user can take
++  # before confirming their account.
++  # config.confirm_within = 3.days
++
++  # If true, requires any email changes to be confirmed (exactly the same way as
++  # initial account confirmation) to be applied. Requires additional unconfirmed_email
++  # db field (see migrations). Until confirmed, new email is stored in
++  # unconfirmed_email column, and copied to email column on successful confirmation.
++  config.reconfirmable = true
++
++  # Defines which key will be used when confirming an account
++  # config.confirmation_keys = [ :email ]
++
++  # ==> Configuration for :rememberable
++  # The time the user will be remembered without asking for credentials again.
++  # config.remember_for = 2.weeks
++
++  # Invalidates all the remember me tokens when the user signs out.
++  config.expire_all_remember_me_on_sign_out = true
++
++  # If true, extends the user's remember period when remembered via cookie.
++  # config.extend_remember_period = false
++
++  # Options to be passed to the created cookie. For instance, you can set
++  # secure: true in order to force SSL only cookies.
++  # config.rememberable_options = {}
++
++  # ==> Configuration for :validatable
++  # Range for password length.
++  config.password_length = 8..128
++
++  # Email regex used to validate email formats. It simply asserts that
++  # one (and only one) @ exists in the given string. This is mainly
++  # to give user feedback and not to assert the e-mail validity.
++  # config.email_regexp = /\A[^@]+@[^@]+\z/
++
++  # ==> Configuration for :timeoutable
++  # The time you want to timeout the user session without activity. After this
++  # time the user will be asked for credentials again. Default is 30 minutes.
++  # config.timeout_in = 30.minutes
++
++  # If true, expires auth token on session timeout.
++  # config.expire_auth_token_on_timeout = false
++
++  # ==> Configuration for :lockable
++  # Defines which strategy will be used to lock an account.
++  # :failed_attempts = Locks an account after a number of failed attempts to sign in.
++  # :none            = No lock strategy. You should handle locking by yourself.
++  # config.lock_strategy = :failed_attempts
++
++  # Defines which key will be used when locking and unlocking an account
++  # config.unlock_keys = [ :email ]
++
++  # Defines which strategy will be used to unlock an account.
++  # :email = Sends an unlock link to the user email
++  # :time  = Re-enables login after a certain amount of time (see :unlock_in below)
++  # :both  = Enables both strategies
++  # :none  = No unlock strategy. You should handle unlocking by yourself.
++  # config.unlock_strategy = :both
++
++  # Number of authentication tries before locking an account if lock_strategy
++  # is failed attempts.
++  # config.maximum_attempts = 20
++
++  # Time interval to unlock the account if :time is enabled as unlock_strategy.
++  # config.unlock_in = 1.hour
++
++  # Warn on the last attempt before the account is locked.
++  # config.last_attempt_warning = true
++
++  # ==> Configuration for :recoverable
++  #
++  # Defines which key will be used when recovering the password for an account
++  # config.reset_password_keys = [ :email ]
++
++  # Time interval you can reset your password with a reset password key.
++  # Don't put a too small interval or your users won't have the time to
++  # change their passwords.
++  config.reset_password_within = 6.hours
++
++  # ==> Configuration for :encryptable
++  # Allow you to use another encryption algorithm besides bcrypt (default). You can use
++  # :sha1, :sha512 or encryptors from others authentication tools as :clearance_sha1,
++  # :authlogic_sha512 (then you should set stretches above to 20 for default behavior)
++  # and :restful_authentication_sha1 (then you should set stretches to 10, and copy
++  # REST_AUTH_SITE_KEY to pepper).
++  #
++  # Require the `devise-encryptable` gem when using anything other than bcrypt
++  # config.encryptor = :sha512
++
++  # ==> Scopes configuration
++  # Turn scoped views on. Before rendering "sessions/new", it will first check for
++  # "users/sessions/new". It's turned off by default because it's slower if you
++  # are using only default views.
++  # config.scoped_views = false
++
++  # Configure the default scope given to Warden. By default it's the first
++  # devise role declared in your routes (usually :user).
++  # config.default_scope = :user
++
++  # Set this configuration to false if you want /users/sign_out to sign out
++  # only the current scope. By default, Devise signs out all scopes.
++  # config.sign_out_all_scopes = true
++
++  # ==> Navigation configuration
++  # Lists the formats that should be treated as navigational. Formats like
++  # :html, should redirect to the sign in page when the user does not have
++  # access, but formats like :xml or :json, should return 401.
++  #
++  # If you have any extra navigational formats, like :iphone or :mobile, you
++  # should add them to the navigational formats lists.
++  #
++  # The "*/*" below is required to match Internet Explorer requests.
++  # config.navigational_formats = ['*/*', :html]
++
++  # The default HTTP method used to sign out a resource. Default is :delete.
++  config.sign_out_via = :delete
++
++  # ==> OmniAuth
++  # Add a new OmniAuth provider. Check the wiki for more information on setting
++  # up on your models and hooks.
++  # config.omniauth :github, 'APP_ID', 'APP_SECRET', scope: 'user,public_repo'
++
++  # ==> Warden configuration
++  # If you want to use other strategies, that are not supported by Devise, or
++  # change the failure app, you can configure them inside the config.warden block.
++  #
++  # config.warden do |manager|
++  #   manager.intercept_401 = false
++  #   manager.default_strategies(scope: :user).unshift :some_external_strategy
++  # end
++
++  # ==> Mountable engine configurations
++  # When using Devise inside an engine, let's call it `MyEngine`, and this engine
++  # is mountable, there are some extra configurations to be taken into account.
++  # The following options are available, assuming the engine is mounted as:
++  #
++  #     mount MyEngine, at: '/my_engine'
++  #
++  # The router that invoked `devise_for`, in the example above, would be:
++  # config.router_name = :my_engine
++  #
++  # When using omniauth, Devise cannot automatically set Omniauth path,
++  # so you need to do it manually. For the users scope, it would be:
++  # config.omniauth_path_prefix = '/my_engine/users/auth'
++end
+diff --git a/csv-uploader/config/locales/devise.en.yml b/csv-uploader/config/locales/devise.en.yml
+new file mode 100644
+index 0000000..9411d74
+--- /dev/null
++++ b/csv-uploader/config/locales/devise.en.yml
+@@ -0,0 +1,60 @@
++# Additional translations at https://github.com/plataformatec/devise/wiki/I18n
++
++en:
++  devise:
++    confirmations:
++      confirmed: "Your email address has been successfully confirmed."
++      send_instructions: "You will receive an email with instructions for how to confirm your email address in a few minutes."
++      send_paranoid_instructions: "If your email address exists in our database, you will receive an email with instructions for how to confirm your email address in a few minutes."
++    failure:
++      already_authenticated: "You are already signed in."
++      inactive: "Your account is not activated yet."
++      invalid: "Invalid %{authentication_keys} or password."
++      locked: "Your account is locked."
++      last_attempt: "You have one more attempt before your account is locked."
++      not_found_in_database: "Invalid %{authentication_keys} or password."
++      timeout: "Your session expired. Please sign in again to continue."
++      unauthenticated: "You need to sign in or sign up before continuing."
++      unconfirmed: "You have to confirm your email address before continuing."
++    mailer:
++      confirmation_instructions:
++        subject: "Confirmation instructions"
++      reset_password_instructions:
++        subject: "Reset password instructions"
++      unlock_instructions:
++        subject: "Unlock instructions"
++    omniauth_callbacks:
++      failure: "Could not authenticate you from %{kind} because \"%{reason}\"."
++      success: "Successfully authenticated from %{kind} account."
++    passwords:
++      no_token: "You can't access this page without coming from a password reset email. If you do come from a password reset email, please make sure you used the full URL provided."
++      send_instructions: "You will receive an email with instructions on how to reset your password in a few minutes."
++      send_paranoid_instructions: "If your email address exists in our database, you will receive a password recovery link at your email address in a few minutes."
++      updated: "Your password has been changed successfully. You are now signed in."
++      updated_not_active: "Your password has been changed successfully."
++    registrations:
++      destroyed: "Bye! Your account has been successfully cancelled. We hope to see you again soon."
++      signed_up: "Welcome! You have signed up successfully."
++      signed_up_but_inactive: "You have signed up successfully. However, we could not sign you in because your account is not yet activated."
++      signed_up_but_locked: "You have signed up successfully. However, we could not sign you in because your account is locked."
++      signed_up_but_unconfirmed: "A message with a confirmation link has been sent to your email address. Please follow the link to activate your account."
++      update_needs_confirmation: "You updated your account successfully, but we need to verify your new email address. Please check your email and follow the confirm link to confirm your new email address."
++      updated: "Your account has been updated successfully."
++    sessions:
++      signed_in: "Logged in successfully."
++      signed_out: "Logged out successfully."
++      already_signed_out: "Signed out successfully."
++    unlocks:
++      send_instructions: "You will receive an email with instructions for how to unlock your account in a few minutes."
++      send_paranoid_instructions: "If your account exists, you will receive an email with instructions for how to unlock it in a few minutes."
++      unlocked: "Your account has been unlocked successfully. Please sign in to continue."
++  errors:
++    messages:
++      already_confirmed: "was already confirmed, please try signing in"
++      confirmation_period_expired: "needs to be confirmed within %{period}, please request a new one"
++      expired: "has expired, please request a new one"
++      not_found: "not found"
++      not_locked: "was not locked"
++      not_saved:
++        one: "1 error prohibited this %{resource} from being saved:"
++        other: "%{count} errors prohibited this %{resource} from being saved:"
+diff --git a/csv-uploader/config/routes.rb b/csv-uploader/config/routes.rb
+index 639e825..61dbeca 100644
+--- a/csv-uploader/config/routes.rb
++++ b/csv-uploader/config/routes.rb
+@@ -1,4 +1,5 @@
+ Rails.application.routes.draw do
++  devise_for :users, :path => 'accounts', path_names: {sign_in: "login", sign_out: "logout"}
+   root to: "purchases#index"
+   resources :purchases do
+     collection { post :upload }
+diff --git a/csv-uploader/db/migrate/20141124190255_devise_create_users.rb b/csv-uploader/db/migrate/20141124190255_devise_create_users.rb
+new file mode 100644
+index 0000000..1b9d546
+--- /dev/null
++++ b/csv-uploader/db/migrate/20141124190255_devise_create_users.rb
+@@ -0,0 +1,42 @@
++class DeviseCreateUsers < ActiveRecord::Migration
++  def change
++    create_table(:users) do |t|
++      ## Database authenticatable
++      t.string :email,              null: false, default: ""
++      t.string :encrypted_password, null: false, default: ""
++
++      ## Recoverable
++      t.string   :reset_password_token
++      t.datetime :reset_password_sent_at
++
++      ## Rememberable
++      t.datetime :remember_created_at
++
++      ## Trackable
++      t.integer  :sign_in_count, default: 0, null: false
++      t.datetime :current_sign_in_at
++      t.datetime :last_sign_in_at
++      t.inet     :current_sign_in_ip
++      t.inet     :last_sign_in_ip
++
++      ## Confirmable
++      # t.string   :confirmation_token
++      # t.datetime :confirmed_at
++      # t.datetime :confirmation_sent_at
++      # t.string   :unconfirmed_email # Only if using reconfirmable
++
++      ## Lockable
++      # t.integer  :failed_attempts, default: 0, null: false # Only if lock strategy is :failed_attempts
++      # t.string   :unlock_token # Only if unlock strategy is :email or :both
++      # t.datetime :locked_at
++
++
++      t.timestamps
++    end
++
++    add_index :users, :email,                unique: true
++    add_index :users, :reset_password_token, unique: true
++    # add_index :users, :confirmation_token,   unique: true
++    # add_index :users, :unlock_token,         unique: true
++  end
++end
+diff --git a/csv-uploader/db/schema.rb b/csv-uploader/db/schema.rb
+index ac590b0..05c1c13 100644
+--- a/csv-uploader/db/schema.rb
++++ b/csv-uploader/db/schema.rb
+@@ -11,7 +11,7 @@
+ #
+ # It's strongly recommended that you check this file into your version control system.
+ 
+-ActiveRecord::Schema.define(version: 20141124061726) do
++ActiveRecord::Schema.define(version: 20141124190255) do
+ 
+   # These are extensions that must be enabled in order to support this database
+   enable_extension "plpgsql"
+@@ -32,4 +32,22 @@ ActiveRecord::Schema.define(version: 20141124061726) do
+     t.integer  "document_id"
+   end
+ 
++  create_table "users", force: true do |t|
++    t.string   "email",                  default: "", null: false
++    t.string   "encrypted_password",     default: "", null: false
++    t.string   "reset_password_token"
++    t.datetime "reset_password_sent_at"
++    t.datetime "remember_created_at"
++    t.integer  "sign_in_count",          default: 0,  null: false
++    t.datetime "current_sign_in_at"
++    t.datetime "last_sign_in_at"
++    t.inet     "current_sign_in_ip"
++    t.inet     "last_sign_in_ip"
++    t.datetime "created_at"
++    t.datetime "updated_at"
++  end
++
++  add_index "users", ["email"], name: "index_users_on_email", unique: true, using: :btree
++  add_index "users", ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true, using: :btree
++
+ end
+diff --git a/csv-uploader/spec/models/user_spec.rb b/csv-uploader/spec/models/user_spec.rb
+new file mode 100644
+index 0000000..0bc0e60
+--- /dev/null
++++ b/csv-uploader/spec/models/user_spec.rb
+@@ -0,0 +1,5 @@
++require 'rails_helper'
++
++RSpec.describe User, :type => :model do
++  pending "add some examples to (or delete) #{__FILE__}"
++end
+-- 
+1.8.5.2 (Apple Git-48)
+

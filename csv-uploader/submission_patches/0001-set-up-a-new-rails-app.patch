@@ -1,0 +1,1251 @@
+From 7fabead7c5917773b83886804960c5f152db5474 Mon Sep 17 00:00:00 2001
+From: Sergii Mertsalov <sergmerts@gmail.com>
+Date: Sun, 23 Nov 2014 11:00:00 -0800
+Subject: [PATCH 1/8] set up a new rails app
+
+---
+ csv-uploader/.gitignore                            |  16 +++
+ csv-uploader/Gemfile                               |  23 ++++
+ csv-uploader/Gemfile.lock                          | 142 +++++++++++++++++++++
+ csv-uploader/README.rdoc                           |  28 ++++
+ csv-uploader/Rakefile                              |   6 +
+ csv-uploader/app/assets/images/.keep               |   0
+ csv-uploader/app/assets/javascripts/application.js |  16 +++
+ .../app/assets/stylesheets/application.css         |  15 +++
+ .../app/controllers/application_controller.rb      |   5 +
+ csv-uploader/app/controllers/concerns/.keep        |   0
+ csv-uploader/app/helpers/application_helper.rb     |   2 +
+ csv-uploader/app/mailers/.keep                     |   0
+ csv-uploader/app/models/.keep                      |   0
+ csv-uploader/app/models/concerns/.keep             |   0
+ .../app/views/layouts/application.html.erb         |  14 ++
+ csv-uploader/bin/bundle                            |   3 +
+ csv-uploader/bin/rails                             |   8 ++
+ csv-uploader/bin/rake                              |   8 ++
+ csv-uploader/bin/spring                            |  18 +++
+ csv-uploader/config.ru                             |   4 +
+ csv-uploader/config/application.rb                 |  30 +++++
+ csv-uploader/config/boot.rb                        |   4 +
+ csv-uploader/config/database.yml                   |   7 +
+ csv-uploader/config/environment.rb                 |   5 +
+ csv-uploader/config/environments/development.rb    |  37 ++++++
+ csv-uploader/config/environments/production.rb     |  78 +++++++++++
+ csv-uploader/config/environments/test.rb           |  39 ++++++
+ csv-uploader/config/initializers/assets.rb         |   8 ++
+ .../config/initializers/backtrace_silencers.rb     |   7 +
+ .../config/initializers/cookies_serializer.rb      |   3 +
+ .../initializers/filter_parameter_logging.rb       |   4 +
+ csv-uploader/config/initializers/inflections.rb    |  16 +++
+ csv-uploader/config/initializers/mime_types.rb     |   4 +
+ csv-uploader/config/initializers/session_store.rb  |   3 +
+ .../config/initializers/wrap_parameters.rb         |  14 ++
+ csv-uploader/config/locales/en.yml                 |  23 ++++
+ csv-uploader/config/routes.rb                      |  56 ++++++++
+ csv-uploader/config/secrets.yml                    |  22 ++++
+ csv-uploader/db/seeds.rb                           |   7 +
+ csv-uploader/lib/assets/.keep                      |   0
+ csv-uploader/lib/tasks/.keep                       |   0
+ csv-uploader/log/.keep                             |   0
+ csv-uploader/public/404.html                       |  67 ++++++++++
+ csv-uploader/public/422.html                       |  67 ++++++++++
+ csv-uploader/public/500.html                       |  66 ++++++++++
+ csv-uploader/public/favicon.ico                    |   0
+ csv-uploader/public/robots.txt                     |   5 +
+ csv-uploader/vendor/assets/javascripts/.keep       |   0
+ csv-uploader/vendor/assets/stylesheets/.keep       |   0
+ 49 files changed, 880 insertions(+)
+ create mode 100644 csv-uploader/.gitignore
+ create mode 100644 csv-uploader/Gemfile
+ create mode 100644 csv-uploader/Gemfile.lock
+ create mode 100644 csv-uploader/README.rdoc
+ create mode 100644 csv-uploader/Rakefile
+ create mode 100644 csv-uploader/app/assets/images/.keep
+ create mode 100644 csv-uploader/app/assets/javascripts/application.js
+ create mode 100644 csv-uploader/app/assets/stylesheets/application.css
+ create mode 100644 csv-uploader/app/controllers/application_controller.rb
+ create mode 100644 csv-uploader/app/controllers/concerns/.keep
+ create mode 100644 csv-uploader/app/helpers/application_helper.rb
+ create mode 100644 csv-uploader/app/mailers/.keep
+ create mode 100644 csv-uploader/app/models/.keep
+ create mode 100644 csv-uploader/app/models/concerns/.keep
+ create mode 100644 csv-uploader/app/views/layouts/application.html.erb
+ create mode 100755 csv-uploader/bin/bundle
+ create mode 100755 csv-uploader/bin/rails
+ create mode 100755 csv-uploader/bin/rake
+ create mode 100755 csv-uploader/bin/spring
+ create mode 100644 csv-uploader/config.ru
+ create mode 100644 csv-uploader/config/application.rb
+ create mode 100644 csv-uploader/config/boot.rb
+ create mode 100644 csv-uploader/config/database.yml
+ create mode 100644 csv-uploader/config/environment.rb
+ create mode 100644 csv-uploader/config/environments/development.rb
+ create mode 100644 csv-uploader/config/environments/production.rb
+ create mode 100644 csv-uploader/config/environments/test.rb
+ create mode 100644 csv-uploader/config/initializers/assets.rb
+ create mode 100644 csv-uploader/config/initializers/backtrace_silencers.rb
+ create mode 100644 csv-uploader/config/initializers/cookies_serializer.rb
+ create mode 100644 csv-uploader/config/initializers/filter_parameter_logging.rb
+ create mode 100644 csv-uploader/config/initializers/inflections.rb
+ create mode 100644 csv-uploader/config/initializers/mime_types.rb
+ create mode 100644 csv-uploader/config/initializers/session_store.rb
+ create mode 100644 csv-uploader/config/initializers/wrap_parameters.rb
+ create mode 100644 csv-uploader/config/locales/en.yml
+ create mode 100644 csv-uploader/config/routes.rb
+ create mode 100644 csv-uploader/config/secrets.yml
+ create mode 100644 csv-uploader/db/seeds.rb
+ create mode 100644 csv-uploader/lib/assets/.keep
+ create mode 100644 csv-uploader/lib/tasks/.keep
+ create mode 100644 csv-uploader/log/.keep
+ create mode 100644 csv-uploader/public/404.html
+ create mode 100644 csv-uploader/public/422.html
+ create mode 100644 csv-uploader/public/500.html
+ create mode 100644 csv-uploader/public/favicon.ico
+ create mode 100644 csv-uploader/public/robots.txt
+ create mode 100644 csv-uploader/vendor/assets/javascripts/.keep
+ create mode 100644 csv-uploader/vendor/assets/stylesheets/.keep
+
+diff --git a/csv-uploader/.gitignore b/csv-uploader/.gitignore
+new file mode 100644
+index 0000000..6a502e9
+--- /dev/null
++++ b/csv-uploader/.gitignore
+@@ -0,0 +1,16 @@
++# See https://help.github.com/articles/ignoring-files for more about ignoring files.
++#
++# If you find yourself ignoring temporary files generated by your text editor
++# or operating system, you probably want to add a global ignore instead:
++#   git config --global core.excludesfile '~/.gitignore_global'
++
++# Ignore bundler config.
++/.bundle
++
++# Ignore the default SQLite database.
++/db/*.sqlite3
++/db/*.sqlite3-journal
++
++# Ignore all logfiles and tempfiles.
++/log/*.log
++/tmp
+diff --git a/csv-uploader/Gemfile b/csv-uploader/Gemfile
+new file mode 100644
+index 0000000..c02b2f5
+--- /dev/null
++++ b/csv-uploader/Gemfile
+@@ -0,0 +1,23 @@
++source 'https://rubygems.org'
++
++gem 'rails'
++gem 'pg'
++gem 'sass-rails'
++gem 'uglifier'
++gem 'coffee-rails'
++gem 'jquery-rails'
++gem 'turbolinks'
++
++group :development do
++  gem 'better_errors'
++  gem 'binding_of_caller'
++  gem 'quiet_assets'
++end
++
++group :test, :development do
++  gem 'rspec-rails'
++end
++
++group :test do
++  gem 'shoulda-matchers'
++end
+diff --git a/csv-uploader/Gemfile.lock b/csv-uploader/Gemfile.lock
+new file mode 100644
+index 0000000..54d1af0
+--- /dev/null
++++ b/csv-uploader/Gemfile.lock
+@@ -0,0 +1,142 @@
++GEM
++  remote: https://rubygems.org/
++  specs:
++    actionmailer (4.1.6)
++      actionpack (= 4.1.6)
++      actionview (= 4.1.6)
++      mail (~> 2.5, >= 2.5.4)
++    actionpack (4.1.6)
++      actionview (= 4.1.6)
++      activesupport (= 4.1.6)
++      rack (~> 1.5.2)
++      rack-test (~> 0.6.2)
++    actionview (4.1.6)
++      activesupport (= 4.1.6)
++      builder (~> 3.1)
++      erubis (~> 2.7.0)
++    activemodel (4.1.6)
++      activesupport (= 4.1.6)
++      builder (~> 3.1)
++    activerecord (4.1.6)
++      activemodel (= 4.1.6)
++      activesupport (= 4.1.6)
++      arel (~> 5.0.0)
++    activesupport (4.1.6)
++      i18n (~> 0.6, >= 0.6.9)
++      json (~> 1.7, >= 1.7.7)
++      minitest (~> 5.1)
++      thread_safe (~> 0.1)
++      tzinfo (~> 1.1)
++    arel (5.0.1.20140414130214)
++    better_errors (2.0.0)
++      coderay (>= 1.0.0)
++      erubis (>= 2.6.6)
++      rack (>= 0.9.0)
++    binding_of_caller (0.7.2)
++      debug_inspector (>= 0.0.1)
++    builder (3.2.2)
++    coderay (1.1.0)
++    coffee-rails (4.0.1)
++      coffee-script (>= 2.2.0)
++      railties (>= 4.0.0, < 5.0)
++    coffee-script (2.3.0)
++      coffee-script-source
++      execjs
++    coffee-script-source (1.8.0)
++    debug_inspector (0.0.2)
++    diff-lcs (1.2.5)
++    erubis (2.7.0)
++    execjs (2.2.2)
++    hike (1.2.3)
++    i18n (0.6.11)
++    jquery-rails (3.1.2)
++      railties (>= 3.0, < 5.0)
++      thor (>= 0.14, < 2.0)
++    json (1.8.1)
++    mail (2.6.3)
++      mime-types (>= 1.16, < 3)
++    mime-types (2.4.3)
++    minitest (5.4.3)
++    multi_json (1.10.1)
++    pg (0.17.1)
++    quiet_assets (1.0.3)
++      railties (>= 3.1, < 5.0)
++    rack (1.5.2)
++    rack-test (0.6.2)
++      rack (>= 1.0)
++    rails (4.1.6)
++      actionmailer (= 4.1.6)
++      actionpack (= 4.1.6)
++      actionview (= 4.1.6)
++      activemodel (= 4.1.6)
++      activerecord (= 4.1.6)
++      activesupport (= 4.1.6)
++      bundler (>= 1.3.0, < 2.0)
++      railties (= 4.1.6)
++      sprockets-rails (~> 2.0)
++    railties (4.1.6)
++      actionpack (= 4.1.6)
++      activesupport (= 4.1.6)
++      rake (>= 0.8.7)
++      thor (>= 0.18.1, < 2.0)
++    rake (10.3.2)
++    rspec-core (3.1.5)
++      rspec-support (~> 3.1.0)
++    rspec-expectations (3.1.2)
++      diff-lcs (>= 1.2.0, < 2.0)
++      rspec-support (~> 3.1.0)
++    rspec-mocks (3.1.2)
++      rspec-support (~> 3.1.0)
++    rspec-rails (3.1.0)
++      actionpack (>= 3.0)
++      activesupport (>= 3.0)
++      railties (>= 3.0)
++      rspec-core (~> 3.1.0)
++      rspec-expectations (~> 3.1.0)
++      rspec-mocks (~> 3.1.0)
++      rspec-support (~> 3.1.0)
++    rspec-support (3.1.1)
++    sass (3.2.19)
++    sass-rails (4.0.4)
++      railties (>= 4.0.0, < 5.0)
++      sass (~> 3.2.2)
++      sprockets (~> 2.8, < 2.12)
++      sprockets-rails (~> 2.0)
++    shoulda-matchers (2.7.0)
++      activesupport (>= 3.0.0)
++    sprockets (2.11.3)
++      hike (~> 1.2)
++      multi_json (~> 1.0)
++      rack (~> 1.0)
++      tilt (~> 1.1, != 1.3.0)
++    sprockets-rails (2.2.0)
++      actionpack (>= 3.0)
++      activesupport (>= 3.0)
++      sprockets (>= 2.8, < 4.0)
++    thor (0.19.1)
++    thread_safe (0.3.4)
++    tilt (1.4.1)
++    turbolinks (2.5.2)
++      coffee-rails
++    tzinfo (1.2.2)
++      thread_safe (~> 0.1)
++    uglifier (2.5.3)
++      execjs (>= 0.3.0)
++      json (>= 1.8.0)
++
++PLATFORMS
++  ruby
++
++DEPENDENCIES
++  better_errors
++  binding_of_caller
++  coffee-rails
++  jquery-rails
++  pg
++  quiet_assets
++  rails
++  rspec-rails
++  sass-rails
++  shoulda-matchers
++  turbolinks
++  uglifier
+diff --git a/csv-uploader/README.rdoc b/csv-uploader/README.rdoc
+new file mode 100644
+index 0000000..dd4e97e
+--- /dev/null
++++ b/csv-uploader/README.rdoc
+@@ -0,0 +1,28 @@
++== README
++
++This README would normally document whatever steps are necessary to get the
++application up and running.
++
++Things you may want to cover:
++
++* Ruby version
++
++* System dependencies
++
++* Configuration
++
++* Database creation
++
++* Database initialization
++
++* How to run the test suite
++
++* Services (job queues, cache servers, search engines, etc.)
++
++* Deployment instructions
++
++* ...
++
++
++Please feel free to use a different markup language if you do not plan to run
++<tt>rake doc:app</tt>.
+diff --git a/csv-uploader/Rakefile b/csv-uploader/Rakefile
+new file mode 100644
+index 0000000..ba6b733
+--- /dev/null
++++ b/csv-uploader/Rakefile
+@@ -0,0 +1,6 @@
++# Add your own tasks in files placed in lib/tasks ending in .rake,
++# for example lib/tasks/capistrano.rake, and they will automatically be available to Rake.
++
++require File.expand_path('../config/application', __FILE__)
++
++Rails.application.load_tasks
+diff --git a/csv-uploader/app/assets/images/.keep b/csv-uploader/app/assets/images/.keep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/csv-uploader/app/assets/javascripts/application.js b/csv-uploader/app/assets/javascripts/application.js
+new file mode 100644
+index 0000000..d6925fa
+--- /dev/null
++++ b/csv-uploader/app/assets/javascripts/application.js
+@@ -0,0 +1,16 @@
++// This is a manifest file that'll be compiled into application.js, which will include all the files
++// listed below.
++//
++// Any JavaScript/Coffee file within this directory, lib/assets/javascripts, vendor/assets/javascripts,
++// or vendor/assets/javascripts of plugins, if any, can be referenced here using a relative path.
++//
++// It's not advisable to add code directly here, but if you do, it'll appear at the bottom of the
++// compiled file.
++//
++// Read Sprockets README (https://github.com/sstephenson/sprockets#sprockets-directives) for details
++// about supported directives.
++//
++//= require jquery
++//= require jquery_ujs
++//= require turbolinks
++//= require_tree .
+diff --git a/csv-uploader/app/assets/stylesheets/application.css b/csv-uploader/app/assets/stylesheets/application.css
+new file mode 100644
+index 0000000..a443db3
+--- /dev/null
++++ b/csv-uploader/app/assets/stylesheets/application.css
+@@ -0,0 +1,15 @@
++/*
++ * This is a manifest file that'll be compiled into application.css, which will include all the files
++ * listed below.
++ *
++ * Any CSS and SCSS file within this directory, lib/assets/stylesheets, vendor/assets/stylesheets,
++ * or vendor/assets/stylesheets of plugins, if any, can be referenced here using a relative path.
++ *
++ * You're free to add application-wide styles to this file and they'll appear at the bottom of the
++ * compiled file so the styles you add here take precedence over styles defined in any styles
++ * defined in the other CSS/SCSS files in this directory. It is generally better to create a new
++ * file per style scope.
++ *
++ *= require_tree .
++ *= require_self
++ */
+diff --git a/csv-uploader/app/controllers/application_controller.rb b/csv-uploader/app/controllers/application_controller.rb
+new file mode 100644
+index 0000000..d83690e
+--- /dev/null
++++ b/csv-uploader/app/controllers/application_controller.rb
+@@ -0,0 +1,5 @@
++class ApplicationController < ActionController::Base
++  # Prevent CSRF attacks by raising an exception.
++  # For APIs, you may want to use :null_session instead.
++  protect_from_forgery with: :exception
++end
+diff --git a/csv-uploader/app/controllers/concerns/.keep b/csv-uploader/app/controllers/concerns/.keep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/csv-uploader/app/helpers/application_helper.rb b/csv-uploader/app/helpers/application_helper.rb
+new file mode 100644
+index 0000000..de6be79
+--- /dev/null
++++ b/csv-uploader/app/helpers/application_helper.rb
+@@ -0,0 +1,2 @@
++module ApplicationHelper
++end
+diff --git a/csv-uploader/app/mailers/.keep b/csv-uploader/app/mailers/.keep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/csv-uploader/app/models/.keep b/csv-uploader/app/models/.keep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/csv-uploader/app/models/concerns/.keep b/csv-uploader/app/models/concerns/.keep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/csv-uploader/app/views/layouts/application.html.erb b/csv-uploader/app/views/layouts/application.html.erb
+new file mode 100644
+index 0000000..637e54c
+--- /dev/null
++++ b/csv-uploader/app/views/layouts/application.html.erb
+@@ -0,0 +1,14 @@
++<!DOCTYPE html>
++<html>
++<head>
++  <title>CsvUploader</title>
++  <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track' => true %>
++  <%= javascript_include_tag 'application', 'data-turbolinks-track' => true %>
++  <%= csrf_meta_tags %>
++</head>
++<body>
++
++<%= yield %>
++
++</body>
++</html>
+diff --git a/csv-uploader/bin/bundle b/csv-uploader/bin/bundle
+new file mode 100755
+index 0000000..66e9889
+--- /dev/null
++++ b/csv-uploader/bin/bundle
+@@ -0,0 +1,3 @@
++#!/usr/bin/env ruby
++ENV['BUNDLE_GEMFILE'] ||= File.expand_path('../../Gemfile', __FILE__)
++load Gem.bin_path('bundler', 'bundle')
+diff --git a/csv-uploader/bin/rails b/csv-uploader/bin/rails
+new file mode 100755
+index 0000000..7feb6a3
+--- /dev/null
++++ b/csv-uploader/bin/rails
+@@ -0,0 +1,8 @@
++#!/usr/bin/env ruby
++begin
++  load File.expand_path("../spring", __FILE__)
++rescue LoadError
++end
++APP_PATH = File.expand_path('../../config/application',  __FILE__)
++require_relative '../config/boot'
++require 'rails/commands'
+diff --git a/csv-uploader/bin/rake b/csv-uploader/bin/rake
+new file mode 100755
+index 0000000..8017a02
+--- /dev/null
++++ b/csv-uploader/bin/rake
+@@ -0,0 +1,8 @@
++#!/usr/bin/env ruby
++begin
++  load File.expand_path("../spring", __FILE__)
++rescue LoadError
++end
++require_relative '../config/boot'
++require 'rake'
++Rake.application.run
+diff --git a/csv-uploader/bin/spring b/csv-uploader/bin/spring
+new file mode 100755
+index 0000000..7f24d96
+--- /dev/null
++++ b/csv-uploader/bin/spring
+@@ -0,0 +1,18 @@
++#!/usr/bin/env ruby
++
++# This file loads spring without using Bundler, in order to be fast
++# It gets overwritten when you run the `spring binstub` command
++
++unless defined?(Spring)
++  require "rubygems"
++  require "bundler"
++
++  if match = Bundler.default_lockfile.read.match(/^GEM$.*?^    (?:  )*spring \((.*?)\)$.*?^$/m)
++    ENV["GEM_PATH"] = ([Bundler.bundle_path.to_s] + Gem.path).join(File::PATH_SEPARATOR)
++    ENV["GEM_HOME"] = ""
++    Gem.paths = ENV
++
++    gem "spring", match[1]
++    require "spring/binstub"
++  end
++end
+diff --git a/csv-uploader/config.ru b/csv-uploader/config.ru
+new file mode 100644
+index 0000000..5bc2a61
+--- /dev/null
++++ b/csv-uploader/config.ru
+@@ -0,0 +1,4 @@
++# This file is used by Rack-based servers to start the application.
++
++require ::File.expand_path('../config/environment',  __FILE__)
++run Rails.application
+diff --git a/csv-uploader/config/application.rb b/csv-uploader/config/application.rb
+new file mode 100644
+index 0000000..482540c
+--- /dev/null
++++ b/csv-uploader/config/application.rb
+@@ -0,0 +1,30 @@
++require File.expand_path('../boot', __FILE__)
++
++# Pick the frameworks you want:
++require "active_model/railtie"
++require "active_record/railtie"
++require "action_controller/railtie"
++require "action_mailer/railtie"
++require "action_view/railtie"
++require "sprockets/railtie"
++# require "rails/test_unit/railtie"
++
++# Require the gems listed in Gemfile, including any gems
++# you've limited to :test, :development, or :production.
++Bundler.require(*Rails.groups)
++
++module CsvUploader
++  class Application < Rails::Application
++    # Settings in config/environments/* take precedence over those specified here.
++    # Application configuration should go into files in config/initializers
++    # -- all .rb files in that directory are automatically loaded.
++
++    # Set Time.zone default to the specified zone and make Active Record auto-convert to this zone.
++    # Run "rake -D time" for a list of tasks for finding time zone names. Default is UTC.
++    # config.time_zone = 'Central Time (US & Canada)'
++
++    # The default locale is :en and all translations from config/locales/*.rb,yml are auto loaded.
++    # config.i18n.load_path += Dir[Rails.root.join('my', 'locales', '*.{rb,yml}').to_s]
++    # config.i18n.default_locale = :de
++  end
++end
+diff --git a/csv-uploader/config/boot.rb b/csv-uploader/config/boot.rb
+new file mode 100644
+index 0000000..5e5f0c1
+--- /dev/null
++++ b/csv-uploader/config/boot.rb
+@@ -0,0 +1,4 @@
++# Set up gems listed in the Gemfile.
++ENV['BUNDLE_GEMFILE'] ||= File.expand_path('../../Gemfile', __FILE__)
++
++require 'bundler/setup' if File.exist?(ENV['BUNDLE_GEMFILE'])
+diff --git a/csv-uploader/config/database.yml b/csv-uploader/config/database.yml
+new file mode 100644
+index 0000000..2ce0477
+--- /dev/null
++++ b/csv-uploader/config/database.yml
+@@ -0,0 +1,7 @@
++development:
++  adapter: postgresql
++  database: csv-uploader_development
++
++test:
++  adapter: postgresql
++  database: csv-uploader_test
+diff --git a/csv-uploader/config/environment.rb b/csv-uploader/config/environment.rb
+new file mode 100644
+index 0000000..ee8d90d
+--- /dev/null
++++ b/csv-uploader/config/environment.rb
+@@ -0,0 +1,5 @@
++# Load the Rails application.
++require File.expand_path('../application', __FILE__)
++
++# Initialize the Rails application.
++Rails.application.initialize!
+diff --git a/csv-uploader/config/environments/development.rb b/csv-uploader/config/environments/development.rb
+new file mode 100644
+index 0000000..ddf0e90
+--- /dev/null
++++ b/csv-uploader/config/environments/development.rb
+@@ -0,0 +1,37 @@
++Rails.application.configure do
++  # Settings specified here will take precedence over those in config/application.rb.
++
++  # In the development environment your application's code is reloaded on
++  # every request. This slows down response time but is perfect for development
++  # since you don't have to restart the web server when you make code changes.
++  config.cache_classes = false
++
++  # Do not eager load code on boot.
++  config.eager_load = false
++
++  # Show full error reports and disable caching.
++  config.consider_all_requests_local       = true
++  config.action_controller.perform_caching = false
++
++  # Don't care if the mailer can't send.
++  config.action_mailer.raise_delivery_errors = false
++
++  # Print deprecation notices to the Rails logger.
++  config.active_support.deprecation = :log
++
++  # Raise an error on page load if there are pending migrations.
++  config.active_record.migration_error = :page_load
++
++  # Debug mode disables concatenation and preprocessing of assets.
++  # This option may cause significant delays in view rendering with a large
++  # number of complex assets.
++  config.assets.debug = true
++
++  # Adds additional error checking when serving assets at runtime.
++  # Checks for improperly declared sprockets dependencies.
++  # Raises helpful error messages.
++  config.assets.raise_runtime_errors = true
++
++  # Raises error for missing translations
++  # config.action_view.raise_on_missing_translations = true
++end
+diff --git a/csv-uploader/config/environments/production.rb b/csv-uploader/config/environments/production.rb
+new file mode 100644
+index 0000000..b93a877
+--- /dev/null
++++ b/csv-uploader/config/environments/production.rb
+@@ -0,0 +1,78 @@
++Rails.application.configure do
++  # Settings specified here will take precedence over those in config/application.rb.
++
++  # Code is not reloaded between requests.
++  config.cache_classes = true
++
++  # Eager load code on boot. This eager loads most of Rails and
++  # your application in memory, allowing both threaded web servers
++  # and those relying on copy on write to perform better.
++  # Rake tasks automatically ignore this option for performance.
++  config.eager_load = true
++
++  # Full error reports are disabled and caching is turned on.
++  config.consider_all_requests_local       = false
++  config.action_controller.perform_caching = true
++
++  # Enable Rack::Cache to put a simple HTTP cache in front of your application
++  # Add `rack-cache` to your Gemfile before enabling this.
++  # For large-scale production use, consider using a caching reverse proxy like nginx, varnish or squid.
++  # config.action_dispatch.rack_cache = true
++
++  # Disable Rails's static asset server (Apache or nginx will already do this).
++  config.serve_static_assets = false
++
++  # Compress JavaScripts and CSS.
++  config.assets.js_compressor = :uglifier
++  # config.assets.css_compressor = :sass
++
++  # Do not fallback to assets pipeline if a precompiled asset is missed.
++  config.assets.compile = false
++
++  # Generate digests for assets URLs.
++  config.assets.digest = true
++
++  # `config.assets.precompile` and `config.assets.version` have moved to config/initializers/assets.rb
++
++  # Specifies the header that your server uses for sending files.
++  # config.action_dispatch.x_sendfile_header = "X-Sendfile" # for apache
++  # config.action_dispatch.x_sendfile_header = 'X-Accel-Redirect' # for nginx
++
++  # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
++  # config.force_ssl = true
++
++  # Set to :debug to see everything in the log.
++  config.log_level = :info
++
++  # Prepend all log lines with the following tags.
++  # config.log_tags = [ :subdomain, :uuid ]
++
++  # Use a different logger for distributed setups.
++  # config.logger = ActiveSupport::TaggedLogging.new(SyslogLogger.new)
++
++  # Use a different cache store in production.
++  # config.cache_store = :mem_cache_store
++
++  # Enable serving of images, stylesheets, and JavaScripts from an asset server.
++  # config.action_controller.asset_host = "http://assets.example.com"
++
++  # Ignore bad email addresses and do not raise email delivery errors.
++  # Set this to true and configure the email server for immediate delivery to raise delivery errors.
++  # config.action_mailer.raise_delivery_errors = false
++
++  # Enable locale fallbacks for I18n (makes lookups for any locale fall back to
++  # the I18n.default_locale when a translation cannot be found).
++  config.i18n.fallbacks = true
++
++  # Send deprecation notices to registered listeners.
++  config.active_support.deprecation = :notify
++
++  # Disable automatic flushing of the log to improve performance.
++  # config.autoflush_log = false
++
++  # Use default logging formatter so that PID and timestamp are not suppressed.
++  config.log_formatter = ::Logger::Formatter.new
++
++  # Do not dump schema after migrations.
++  config.active_record.dump_schema_after_migration = false
++end
+diff --git a/csv-uploader/config/environments/test.rb b/csv-uploader/config/environments/test.rb
+new file mode 100644
+index 0000000..053f5b6
+--- /dev/null
++++ b/csv-uploader/config/environments/test.rb
+@@ -0,0 +1,39 @@
++Rails.application.configure do
++  # Settings specified here will take precedence over those in config/application.rb.
++
++  # The test environment is used exclusively to run your application's
++  # test suite. You never need to work with it otherwise. Remember that
++  # your test database is "scratch space" for the test suite and is wiped
++  # and recreated between test runs. Don't rely on the data there!
++  config.cache_classes = true
++
++  # Do not eager load code on boot. This avoids loading your whole application
++  # just for the purpose of running a single test. If you are using a tool that
++  # preloads Rails for running tests, you may have to set it to true.
++  config.eager_load = false
++
++  # Configure static asset server for tests with Cache-Control for performance.
++  config.serve_static_assets  = true
++  config.static_cache_control = 'public, max-age=3600'
++
++  # Show full error reports and disable caching.
++  config.consider_all_requests_local       = true
++  config.action_controller.perform_caching = false
++
++  # Raise exceptions instead of rendering exception templates.
++  config.action_dispatch.show_exceptions = false
++
++  # Disable request forgery protection in test environment.
++  config.action_controller.allow_forgery_protection = false
++
++  # Tell Action Mailer not to deliver emails to the real world.
++  # The :test delivery method accumulates sent emails in the
++  # ActionMailer::Base.deliveries array.
++  config.action_mailer.delivery_method = :test
++
++  # Print deprecation notices to the stderr.
++  config.active_support.deprecation = :stderr
++
++  # Raises error for missing translations
++  # config.action_view.raise_on_missing_translations = true
++end
+diff --git a/csv-uploader/config/initializers/assets.rb b/csv-uploader/config/initializers/assets.rb
+new file mode 100644
+index 0000000..d2f4ec3
+--- /dev/null
++++ b/csv-uploader/config/initializers/assets.rb
+@@ -0,0 +1,8 @@
++# Be sure to restart your server when you modify this file.
++
++# Version of your assets, change this if you want to expire all your assets.
++Rails.application.config.assets.version = '1.0'
++
++# Precompile additional assets.
++# application.js, application.css, and all non-JS/CSS in app/assets folder are already added.
++# Rails.application.config.assets.precompile += %w( search.js )
+diff --git a/csv-uploader/config/initializers/backtrace_silencers.rb b/csv-uploader/config/initializers/backtrace_silencers.rb
+new file mode 100644
+index 0000000..59385cd
+--- /dev/null
++++ b/csv-uploader/config/initializers/backtrace_silencers.rb
+@@ -0,0 +1,7 @@
++# Be sure to restart your server when you modify this file.
++
++# You can add backtrace silencers for libraries that you're using but don't wish to see in your backtraces.
++# Rails.backtrace_cleaner.add_silencer { |line| line =~ /my_noisy_library/ }
++
++# You can also remove all the silencers if you're trying to debug a problem that might stem from framework code.
++# Rails.backtrace_cleaner.remove_silencers!
+diff --git a/csv-uploader/config/initializers/cookies_serializer.rb b/csv-uploader/config/initializers/cookies_serializer.rb
+new file mode 100644
+index 0000000..7a06a89
+--- /dev/null
++++ b/csv-uploader/config/initializers/cookies_serializer.rb
+@@ -0,0 +1,3 @@
++# Be sure to restart your server when you modify this file.
++
++Rails.application.config.action_dispatch.cookies_serializer = :json
+\ No newline at end of file
+diff --git a/csv-uploader/config/initializers/filter_parameter_logging.rb b/csv-uploader/config/initializers/filter_parameter_logging.rb
+new file mode 100644
+index 0000000..4a994e1
+--- /dev/null
++++ b/csv-uploader/config/initializers/filter_parameter_logging.rb
+@@ -0,0 +1,4 @@
++# Be sure to restart your server when you modify this file.
++
++# Configure sensitive parameters which will be filtered from the log file.
++Rails.application.config.filter_parameters += [:password]
+diff --git a/csv-uploader/config/initializers/inflections.rb b/csv-uploader/config/initializers/inflections.rb
+new file mode 100644
+index 0000000..ac033bf
+--- /dev/null
++++ b/csv-uploader/config/initializers/inflections.rb
+@@ -0,0 +1,16 @@
++# Be sure to restart your server when you modify this file.
++
++# Add new inflection rules using the following format. Inflections
++# are locale specific, and you may define rules for as many different
++# locales as you wish. All of these examples are active by default:
++# ActiveSupport::Inflector.inflections(:en) do |inflect|
++#   inflect.plural /^(ox)$/i, '\1en'
++#   inflect.singular /^(ox)en/i, '\1'
++#   inflect.irregular 'person', 'people'
++#   inflect.uncountable %w( fish sheep )
++# end
++
++# These inflection rules are supported but not enabled by default:
++# ActiveSupport::Inflector.inflections(:en) do |inflect|
++#   inflect.acronym 'RESTful'
++# end
+diff --git a/csv-uploader/config/initializers/mime_types.rb b/csv-uploader/config/initializers/mime_types.rb
+new file mode 100644
+index 0000000..dc18996
+--- /dev/null
++++ b/csv-uploader/config/initializers/mime_types.rb
+@@ -0,0 +1,4 @@
++# Be sure to restart your server when you modify this file.
++
++# Add new mime types for use in respond_to blocks:
++# Mime::Type.register "text/richtext", :rtf
+diff --git a/csv-uploader/config/initializers/session_store.rb b/csv-uploader/config/initializers/session_store.rb
+new file mode 100644
+index 0000000..43ff468
+--- /dev/null
++++ b/csv-uploader/config/initializers/session_store.rb
+@@ -0,0 +1,3 @@
++# Be sure to restart your server when you modify this file.
++
++Rails.application.config.session_store :cookie_store, key: '_csv-uploader_session'
+diff --git a/csv-uploader/config/initializers/wrap_parameters.rb b/csv-uploader/config/initializers/wrap_parameters.rb
+new file mode 100644
+index 0000000..33725e9
+--- /dev/null
++++ b/csv-uploader/config/initializers/wrap_parameters.rb
+@@ -0,0 +1,14 @@
++# Be sure to restart your server when you modify this file.
++
++# This file contains settings for ActionController::ParamsWrapper which
++# is enabled by default.
++
++# Enable parameter wrapping for JSON. You can disable this by setting :format to an empty array.
++ActiveSupport.on_load(:action_controller) do
++  wrap_parameters format: [:json] if respond_to?(:wrap_parameters)
++end
++
++# To enable root element in JSON for ActiveRecord objects.
++# ActiveSupport.on_load(:active_record) do
++#  self.include_root_in_json = true
++# end
+diff --git a/csv-uploader/config/locales/en.yml b/csv-uploader/config/locales/en.yml
+new file mode 100644
+index 0000000..0653957
+--- /dev/null
++++ b/csv-uploader/config/locales/en.yml
+@@ -0,0 +1,23 @@
++# Files in the config/locales directory are used for internationalization
++# and are automatically loaded by Rails. If you want to use locales other
++# than English, add the necessary files in this directory.
++#
++# To use the locales, use `I18n.t`:
++#
++#     I18n.t 'hello'
++#
++# In views, this is aliased to just `t`:
++#
++#     <%= t('hello') %>
++#
++# To use a different locale, set it with `I18n.locale`:
++#
++#     I18n.locale = :es
++#
++# This would use the information in config/locales/es.yml.
++#
++# To learn more, please read the Rails Internationalization guide
++# available at http://guides.rubyonrails.org/i18n.html.
++
++en:
++  hello: "Hello world"
+diff --git a/csv-uploader/config/routes.rb b/csv-uploader/config/routes.rb
+new file mode 100644
+index 0000000..3f66539
+--- /dev/null
++++ b/csv-uploader/config/routes.rb
+@@ -0,0 +1,56 @@
++Rails.application.routes.draw do
++  # The priority is based upon order of creation: first created -> highest priority.
++  # See how all your routes lay out with "rake routes".
++
++  # You can have the root of your site routed with "root"
++  # root 'welcome#index'
++
++  # Example of regular route:
++  #   get 'products/:id' => 'catalog#view'
++
++  # Example of named route that can be invoked with purchase_url(id: product.id)
++  #   get 'products/:id/purchase' => 'catalog#purchase', as: :purchase
++
++  # Example resource route (maps HTTP verbs to controller actions automatically):
++  #   resources :products
++
++  # Example resource route with options:
++  #   resources :products do
++  #     member do
++  #       get 'short'
++  #       post 'toggle'
++  #     end
++  #
++  #     collection do
++  #       get 'sold'
++  #     end
++  #   end
++
++  # Example resource route with sub-resources:
++  #   resources :products do
++  #     resources :comments, :sales
++  #     resource :seller
++  #   end
++
++  # Example resource route with more complex sub-resources:
++  #   resources :products do
++  #     resources :comments
++  #     resources :sales do
++  #       get 'recent', on: :collection
++  #     end
++  #   end
++
++  # Example resource route with concerns:
++  #   concern :toggleable do
++  #     post 'toggle'
++  #   end
++  #   resources :posts, concerns: :toggleable
++  #   resources :photos, concerns: :toggleable
++
++  # Example resource route within a namespace:
++  #   namespace :admin do
++  #     # Directs /admin/products/* to Admin::ProductsController
++  #     # (app/controllers/admin/products_controller.rb)
++  #     resources :products
++  #   end
++end
+diff --git a/csv-uploader/config/secrets.yml b/csv-uploader/config/secrets.yml
+new file mode 100644
+index 0000000..5d07ea1
+--- /dev/null
++++ b/csv-uploader/config/secrets.yml
+@@ -0,0 +1,22 @@
++# Be sure to restart your server when you modify this file.
++
++# Your secret key is used for verifying the integrity of signed cookies.
++# If you change this key, all old signed cookies will become invalid!
++
++# Make sure the secret is at least 30 characters and all random,
++# no regular words or you'll be exposed to dictionary attacks.
++# You can use `rake secret` to generate a secure secret key.
++
++# Make sure the secrets in this file are kept private
++# if you're sharing your code publicly.
++
++development:
++  secret_key_base: 29fa79e5fad872208ada853ffda268a4421b4c8ba44e2d7bbb97995f6839b652142f9db42cc8675b05be17bece7c587cada6470c8d4b7ee62dd5673c2ef2426f
++
++test:
++  secret_key_base: cc34bf44f2292b80e88bf8e598ca2952c3489628594c6861d54082ffbaacc2cd0f322fc1de5787546c25960b76fe15d5adc6fe948aab81d0f955bd943d24661b
++
++# Do not keep production secrets in the repository,
++# instead read values from the environment.
++production:
++  secret_key_base: <%= ENV["SECRET_KEY_BASE"] %>
+diff --git a/csv-uploader/db/seeds.rb b/csv-uploader/db/seeds.rb
+new file mode 100644
+index 0000000..4edb1e8
+--- /dev/null
++++ b/csv-uploader/db/seeds.rb
+@@ -0,0 +1,7 @@
++# This file should contain all the record creation needed to seed the database with its default values.
++# The data can then be loaded with the rake db:seed (or created alongside the db with db:setup).
++#
++# Examples:
++#
++#   cities = City.create([{ name: 'Chicago' }, { name: 'Copenhagen' }])
++#   Mayor.create(name: 'Emanuel', city: cities.first)
+diff --git a/csv-uploader/lib/assets/.keep b/csv-uploader/lib/assets/.keep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/csv-uploader/lib/tasks/.keep b/csv-uploader/lib/tasks/.keep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/csv-uploader/log/.keep b/csv-uploader/log/.keep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/csv-uploader/public/404.html b/csv-uploader/public/404.html
+new file mode 100644
+index 0000000..b612547
+--- /dev/null
++++ b/csv-uploader/public/404.html
+@@ -0,0 +1,67 @@
++<!DOCTYPE html>
++<html>
++<head>
++  <title>The page you were looking for doesn't exist (404)</title>
++  <meta name="viewport" content="width=device-width,initial-scale=1">
++  <style>
++  body {
++    background-color: #EFEFEF;
++    color: #2E2F30;
++    text-align: center;
++    font-family: arial, sans-serif;
++    margin: 0;
++  }
++
++  div.dialog {
++    width: 95%;
++    max-width: 33em;
++    margin: 4em auto 0;
++  }
++
++  div.dialog > div {
++    border: 1px solid #CCC;
++    border-right-color: #999;
++    border-left-color: #999;
++    border-bottom-color: #BBB;
++    border-top: #B00100 solid 4px;
++    border-top-left-radius: 9px;
++    border-top-right-radius: 9px;
++    background-color: white;
++    padding: 7px 12% 0;
++    box-shadow: 0 3px 8px rgba(50, 50, 50, 0.17);
++  }
++
++  h1 {
++    font-size: 100%;
++    color: #730E15;
++    line-height: 1.5em;
++  }
++
++  div.dialog > p {
++    margin: 0 0 1em;
++    padding: 1em;
++    background-color: #F7F7F7;
++    border: 1px solid #CCC;
++    border-right-color: #999;
++    border-left-color: #999;
++    border-bottom-color: #999;
++    border-bottom-left-radius: 4px;
++    border-bottom-right-radius: 4px;
++    border-top-color: #DADADA;
++    color: #666;
++    box-shadow: 0 3px 8px rgba(50, 50, 50, 0.17);
++  }
++  </style>
++</head>
++
++<body>
++  <!-- This file lives in public/404.html -->
++  <div class="dialog">
++    <div>
++      <h1>The page you were looking for doesn't exist.</h1>
++      <p>You may have mistyped the address or the page may have moved.</p>
++    </div>
++    <p>If you are the application owner check the logs for more information.</p>
++  </div>
++</body>
++</html>
+diff --git a/csv-uploader/public/422.html b/csv-uploader/public/422.html
+new file mode 100644
+index 0000000..a21f82b
+--- /dev/null
++++ b/csv-uploader/public/422.html
+@@ -0,0 +1,67 @@
++<!DOCTYPE html>
++<html>
++<head>
++  <title>The change you wanted was rejected (422)</title>
++  <meta name="viewport" content="width=device-width,initial-scale=1">
++  <style>
++  body {
++    background-color: #EFEFEF;
++    color: #2E2F30;
++    text-align: center;
++    font-family: arial, sans-serif;
++    margin: 0;
++  }
++
++  div.dialog {
++    width: 95%;
++    max-width: 33em;
++    margin: 4em auto 0;
++  }
++
++  div.dialog > div {
++    border: 1px solid #CCC;
++    border-right-color: #999;
++    border-left-color: #999;
++    border-bottom-color: #BBB;
++    border-top: #B00100 solid 4px;
++    border-top-left-radius: 9px;
++    border-top-right-radius: 9px;
++    background-color: white;
++    padding: 7px 12% 0;
++    box-shadow: 0 3px 8px rgba(50, 50, 50, 0.17);
++  }
++
++  h1 {
++    font-size: 100%;
++    color: #730E15;
++    line-height: 1.5em;
++  }
++
++  div.dialog > p {
++    margin: 0 0 1em;
++    padding: 1em;
++    background-color: #F7F7F7;
++    border: 1px solid #CCC;
++    border-right-color: #999;
++    border-left-color: #999;
++    border-bottom-color: #999;
++    border-bottom-left-radius: 4px;
++    border-bottom-right-radius: 4px;
++    border-top-color: #DADADA;
++    color: #666;
++    box-shadow: 0 3px 8px rgba(50, 50, 50, 0.17);
++  }
++  </style>
++</head>
++
++<body>
++  <!-- This file lives in public/422.html -->
++  <div class="dialog">
++    <div>
++      <h1>The change you wanted was rejected.</h1>
++      <p>Maybe you tried to change something you didn't have access to.</p>
++    </div>
++    <p>If you are the application owner check the logs for more information.</p>
++  </div>
++</body>
++</html>
+diff --git a/csv-uploader/public/500.html b/csv-uploader/public/500.html
+new file mode 100644
+index 0000000..061abc5
+--- /dev/null
++++ b/csv-uploader/public/500.html
+@@ -0,0 +1,66 @@
++<!DOCTYPE html>
++<html>
++<head>
++  <title>We're sorry, but something went wrong (500)</title>
++  <meta name="viewport" content="width=device-width,initial-scale=1">
++  <style>
++  body {
++    background-color: #EFEFEF;
++    color: #2E2F30;
++    text-align: center;
++    font-family: arial, sans-serif;
++    margin: 0;
++  }
++
++  div.dialog {
++    width: 95%;
++    max-width: 33em;
++    margin: 4em auto 0;
++  }
++
++  div.dialog > div {
++    border: 1px solid #CCC;
++    border-right-color: #999;
++    border-left-color: #999;
++    border-bottom-color: #BBB;
++    border-top: #B00100 solid 4px;
++    border-top-left-radius: 9px;
++    border-top-right-radius: 9px;
++    background-color: white;
++    padding: 7px 12% 0;
++    box-shadow: 0 3px 8px rgba(50, 50, 50, 0.17);
++  }
++
++  h1 {
++    font-size: 100%;
++    color: #730E15;
++    line-height: 1.5em;
++  }
++
++  div.dialog > p {
++    margin: 0 0 1em;
++    padding: 1em;
++    background-color: #F7F7F7;
++    border: 1px solid #CCC;
++    border-right-color: #999;
++    border-left-color: #999;
++    border-bottom-color: #999;
++    border-bottom-left-radius: 4px;
++    border-bottom-right-radius: 4px;
++    border-top-color: #DADADA;
++    color: #666;
++    box-shadow: 0 3px 8px rgba(50, 50, 50, 0.17);
++  }
++  </style>
++</head>
++
++<body>
++  <!-- This file lives in public/500.html -->
++  <div class="dialog">
++    <div>
++      <h1>We're sorry, but something went wrong.</h1>
++    </div>
++    <p>If you are the application owner check the logs for more information.</p>
++  </div>
++</body>
++</html>
+diff --git a/csv-uploader/public/favicon.ico b/csv-uploader/public/favicon.ico
+new file mode 100644
+index 0000000..e69de29
+diff --git a/csv-uploader/public/robots.txt b/csv-uploader/public/robots.txt
+new file mode 100644
+index 0000000..3c9c7c0
+--- /dev/null
++++ b/csv-uploader/public/robots.txt
+@@ -0,0 +1,5 @@
++# See http://www.robotstxt.org/robotstxt.html for documentation on how to use the robots.txt file
++#
++# To ban all spiders from the entire site uncomment the next two lines:
++# User-agent: *
++# Disallow: /
+diff --git a/csv-uploader/vendor/assets/javascripts/.keep b/csv-uploader/vendor/assets/javascripts/.keep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/csv-uploader/vendor/assets/stylesheets/.keep b/csv-uploader/vendor/assets/stylesheets/.keep
+new file mode 100644
+index 0000000..e69de29
+-- 
+1.8.5.2 (Apple Git-48)
+

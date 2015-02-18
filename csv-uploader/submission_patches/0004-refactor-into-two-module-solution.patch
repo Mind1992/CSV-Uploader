@@ -1,0 +1,285 @@
+From d7b417da5b03705ab69e276f7becdb54d3013648 Mon Sep 17 00:00:00 2001
+From: Sergii Mertsalov <sergmerts@gmail.com>
+Date: Mon, 24 Nov 2014 07:17:17 -0800
+Subject: [PATCH 4/8] refactor into two-module solution
+
+---
+ csv-uploader/Gemfile                                  |  2 ++
+ csv-uploader/Gemfile.lock                             |  9 +++++++++
+ csv-uploader/app/controllers/documents_controller.rb  |  8 ++++++++
+ csv-uploader/app/controllers/purchases_controller.rb  | 13 +++++++++++--
+ csv-uploader/app/models/document.rb                   |  3 +++
+ csv-uploader/app/models/purchase.rb                   |  7 ++++---
+ csv-uploader/app/views/purchases/index.html.erb       |  4 +++-
+ .../db/migrate/20141123200641_change_columns_names.rb | 10 ----------
+ .../db/migrate/20141124040411_change_columns_names.rb | 10 ++++++++++
+ .../db/migrate/20141124051253_create_files.rb         |  7 +++++++
+ ...051456_change_file_name_to_file_id_in_purchases.rb |  5 +++++
+ .../20141124053000_change_file_id_to_integer_type.rb  |  6 ++++++
+ .../20141124061726_change_table_and_columns_names.rb  |  7 +++++++
+ csv-uploader/db/schema.rb                             | 19 ++++++++++++-------
+ 14 files changed, 87 insertions(+), 23 deletions(-)
+ create mode 100644 csv-uploader/app/controllers/documents_controller.rb
+ create mode 100644 csv-uploader/app/models/document.rb
+ delete mode 100644 csv-uploader/db/migrate/20141123200641_change_columns_names.rb
+ create mode 100644 csv-uploader/db/migrate/20141124040411_change_columns_names.rb
+ create mode 100644 csv-uploader/db/migrate/20141124051253_create_files.rb
+ create mode 100644 csv-uploader/db/migrate/20141124051456_change_file_name_to_file_id_in_purchases.rb
+ create mode 100644 csv-uploader/db/migrate/20141124053000_change_file_id_to_integer_type.rb
+ create mode 100644 csv-uploader/db/migrate/20141124061726_change_table_and_columns_names.rb
+
+diff --git a/csv-uploader/Gemfile b/csv-uploader/Gemfile
+index c02b2f5..a3e4818 100644
+--- a/csv-uploader/Gemfile
++++ b/csv-uploader/Gemfile
+@@ -7,6 +7,8 @@ gem 'uglifier'
+ gem 'coffee-rails'
+ gem 'jquery-rails'
+ gem 'turbolinks'
++gem 'pry'
++gem 'smarter_csv'
+ 
+ group :development do
+   gem 'better_errors'
+diff --git a/csv-uploader/Gemfile.lock b/csv-uploader/Gemfile.lock
+index 54d1af0..00b645a 100644
+--- a/csv-uploader/Gemfile.lock
++++ b/csv-uploader/Gemfile.lock
+@@ -55,10 +55,15 @@ GEM
+     json (1.8.1)
+     mail (2.6.3)
+       mime-types (>= 1.16, < 3)
++    method_source (0.8.2)
+     mime-types (2.4.3)
+     minitest (5.4.3)
+     multi_json (1.10.1)
+     pg (0.17.1)
++    pry (0.10.1)
++      coderay (~> 1.1.0)
++      method_source (~> 0.8.1)
++      slop (~> 3.4)
+     quiet_assets (1.0.3)
+       railties (>= 3.1, < 5.0)
+     rack (1.5.2)
+@@ -104,6 +109,8 @@ GEM
+       sprockets-rails (~> 2.0)
+     shoulda-matchers (2.7.0)
+       activesupport (>= 3.0.0)
++    slop (3.6.0)
++    smarter_csv (1.0.19)
+     sprockets (2.11.3)
+       hike (~> 1.2)
+       multi_json (~> 1.0)
+@@ -133,10 +140,12 @@ DEPENDENCIES
+   coffee-rails
+   jquery-rails
+   pg
++  pry
+   quiet_assets
+   rails
+   rspec-rails
+   sass-rails
+   shoulda-matchers
++  smarter_csv
+   turbolinks
+   uglifier
+diff --git a/csv-uploader/app/controllers/documents_controller.rb b/csv-uploader/app/controllers/documents_controller.rb
+new file mode 100644
+index 0000000..cce6d1c
+--- /dev/null
++++ b/csv-uploader/app/controllers/documents_controller.rb
+@@ -0,0 +1,8 @@
++class DocumentsController < ApplicationController
++
++private
++
++  def document_params
++    params.require(:document).permit(:document_name)
++  end
++end
+diff --git a/csv-uploader/app/controllers/purchases_controller.rb b/csv-uploader/app/controllers/purchases_controller.rb
+index 880f2c1..2786923 100644
+--- a/csv-uploader/app/controllers/purchases_controller.rb
++++ b/csv-uploader/app/controllers/purchases_controller.rb
+@@ -1,10 +1,19 @@
+ class PurchasesController < ApplicationController
+   def index
+-
++    @documents = Document.all
+   end
+ 
+   def upload
+-    Purchase.import(params[:file])
++    @purchase = Purchase.import(params[:file])
+     redirect_to root_url, notice: "File uploaded."
+   end
++
++private
++
++  def purchase_params
++    params.require(:purchase).permit(:purchaser_name, :item_description,
++                                     :item_price, :purchase_count,
++                                     :merchant_address, :merchant_name,
++                                     :document_id)
++  end
+ end
+diff --git a/csv-uploader/app/models/document.rb b/csv-uploader/app/models/document.rb
+new file mode 100644
+index 0000000..f5681e5
+--- /dev/null
++++ b/csv-uploader/app/models/document.rb
+@@ -0,0 +1,3 @@
++class Document < ActiveRecord::Base
++  has_many :purchases
++end
+diff --git a/csv-uploader/app/models/purchase.rb b/csv-uploader/app/models/purchase.rb
+index c9acd40..2c020eb 100644
+--- a/csv-uploader/app/models/purchase.rb
++++ b/csv-uploader/app/models/purchase.rb
+@@ -1,8 +1,9 @@
+ class Purchase < ActiveRecord::Base
++  belongs_to :document
+ 
+   def self.import(file)
+-    CSV.foreach(file.path, headers: true) do |row|
+-      Purchase.create! row.to_hash
+-    end
++    results = SmarterCSV.process(file.path)
++    Document.create!({:document_name => file.original_filename})
++    Document.all.last.purchases << (Purchase.create!(results))
+   end
+ end
+diff --git a/csv-uploader/app/views/purchases/index.html.erb b/csv-uploader/app/views/purchases/index.html.erb
+index bdb6fe5..805f7aa 100644
+--- a/csv-uploader/app/views/purchases/index.html.erb
++++ b/csv-uploader/app/views/purchases/index.html.erb
+@@ -1,5 +1,7 @@
+ <h2>Upload CSV file</h2>
+-
++<% @documents.each do |doc| %>
++  <%= doc.document_name %>
++<% end %>
+ <%= form_tag upload_purchases_path, multipart: true do %>
+   <%= file_field_tag :file %>
+   <%= submit_tag "Upload" %>
+diff --git a/csv-uploader/db/migrate/20141123200641_change_columns_names.rb b/csv-uploader/db/migrate/20141123200641_change_columns_names.rb
+deleted file mode 100644
+index c458eae..0000000
+--- a/csv-uploader/db/migrate/20141123200641_change_columns_names.rb
++++ /dev/null
+@@ -1,10 +0,0 @@
+-class ChangeColumnsNames < ActiveRecord::Migration
+-  def change
+-    rename_column :purchases, :purchaser_name, "purchaser name"
+-    rename_column :purchases, :item_description, "item description"
+-    rename_column :purchases, :item_price, "item price"
+-    rename_column :purchases, :purchase_count, "purchase count"
+-    rename_column :purchases, :merchant_address, "merchant address"
+-    rename_column :purchases, :merchant_name, "merchant name"
+-  end
+-end
+diff --git a/csv-uploader/db/migrate/20141124040411_change_columns_names.rb b/csv-uploader/db/migrate/20141124040411_change_columns_names.rb
+new file mode 100644
+index 0000000..bcdeea0
+--- /dev/null
++++ b/csv-uploader/db/migrate/20141124040411_change_columns_names.rb
+@@ -0,0 +1,10 @@
++class ChangeColumnsNames < ActiveRecord::Migration
++  def change
++    rename_column :purchases, "purchaser name", :purchaser_name
++    rename_column :purchases, "item description", :item_description
++    rename_column :purchases, "item price", :item_price
++    rename_column :purchases, "purchase count", :purchase_count
++    rename_column :purchases, "merchant address", :merchant_address
++    rename_column :purchases, "merchant name", :merchant_name
++  end
++end
+diff --git a/csv-uploader/db/migrate/20141124051253_create_files.rb b/csv-uploader/db/migrate/20141124051253_create_files.rb
+new file mode 100644
+index 0000000..85e83fe
+--- /dev/null
++++ b/csv-uploader/db/migrate/20141124051253_create_files.rb
+@@ -0,0 +1,7 @@
++class CreateFiles < ActiveRecord::Migration
++  def change
++    create_table :files do |t|
++      t.string :file_name
++    end
++  end
++end
+diff --git a/csv-uploader/db/migrate/20141124051456_change_file_name_to_file_id_in_purchases.rb b/csv-uploader/db/migrate/20141124051456_change_file_name_to_file_id_in_purchases.rb
+new file mode 100644
+index 0000000..1fd756d
+--- /dev/null
++++ b/csv-uploader/db/migrate/20141124051456_change_file_name_to_file_id_in_purchases.rb
+@@ -0,0 +1,5 @@
++class ChangeFileNameToFileIdInPurchases < ActiveRecord::Migration
++  def change
++    rename_column :purchases, :file_name, :file_id
++  end
++end
+diff --git a/csv-uploader/db/migrate/20141124053000_change_file_id_to_integer_type.rb b/csv-uploader/db/migrate/20141124053000_change_file_id_to_integer_type.rb
+new file mode 100644
+index 0000000..27c99e6
+--- /dev/null
++++ b/csv-uploader/db/migrate/20141124053000_change_file_id_to_integer_type.rb
+@@ -0,0 +1,6 @@
++class ChangeFileIdToIntegerType < ActiveRecord::Migration
++  def change
++    remove_column :purchases, :file_id, :string
++    add_column :purchases, :file_id, :integer
++  end
++end
+diff --git a/csv-uploader/db/migrate/20141124061726_change_table_and_columns_names.rb b/csv-uploader/db/migrate/20141124061726_change_table_and_columns_names.rb
+new file mode 100644
+index 0000000..6fe432d
+--- /dev/null
++++ b/csv-uploader/db/migrate/20141124061726_change_table_and_columns_names.rb
+@@ -0,0 +1,7 @@
++class ChangeTableAndColumnsNames < ActiveRecord::Migration
++  def change
++    rename_column :files, :file_name, :document_name
++    rename_column :purchases, :file_id, :document_id
++    rename_table :files, :documents
++  end
++end
+diff --git a/csv-uploader/db/schema.rb b/csv-uploader/db/schema.rb
+index 014f6ae..ac590b0 100644
+--- a/csv-uploader/db/schema.rb
++++ b/csv-uploader/db/schema.rb
+@@ -11,20 +11,25 @@
+ #
+ # It's strongly recommended that you check this file into your version control system.
+ 
+-ActiveRecord::Schema.define(version: 20141123200641) do
++ActiveRecord::Schema.define(version: 20141124061726) do
+ 
+   # These are extensions that must be enabled in order to support this database
+   enable_extension "plpgsql"
+ 
++  create_table "documents", force: true do |t|
++    t.string "document_name"
++  end
++
+   create_table "purchases", force: true do |t|
+-    t.string   "purchaser name"
+-    t.string   "item description"
+-    t.decimal  "item price"
+-    t.integer  "purchase count"
+-    t.string   "merchant address"
+-    t.string   "merchant name"
++    t.string   "purchaser_name"
++    t.string   "item_description"
++    t.decimal  "item_price"
++    t.integer  "purchase_count"
++    t.string   "merchant_address"
++    t.string   "merchant_name"
+     t.datetime "created_at"
+     t.datetime "updated_at"
++    t.integer  "document_id"
+   end
+ 
+ end
+-- 
+1.8.5.2 (Apple Git-48)
+

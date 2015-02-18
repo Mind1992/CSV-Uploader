@@ -1,0 +1,480 @@
+From 1134c99ae8f733ecc23edc72a21ae7fd45720ecb Mon Sep 17 00:00:00 2001
+From: Sergii Mertsalov <sergmerts@gmail.com>
+Date: Mon, 24 Nov 2014 18:44:02 -0800
+Subject: [PATCH 7/8] add authentication with Github
+
+---
+ csv-uploader/.gitignore                            |  1 +
+ csv-uploader/Gemfile                               |  4 ++
+ csv-uploader/Gemfile.lock                          | 37 +++++++++++++++++
+ csv-uploader/README.md                             | 47 ++++++++++++++++++++++
+ csv-uploader/README.rdoc                           | 28 -------------
+ .../app/assets/stylesheets/custom.css.scss         | 12 +++++-
+ .../app/controllers/application_controller.rb      |  1 +
+ .../app/controllers/callbacks_controller.rb        |  6 +++
+ .../app/controllers/purchases_controller.rb        |  9 -----
+ csv-uploader/app/models/user.rb                    | 12 +++++-
+ .../app/views/devise/shared/_links.html.erb        | 10 ++---
+ .../app/views/layouts/application.html.erb         |  5 ++-
+ csv-uploader/app/views/purchases/index.html.erb    | 47 +++++++++++++++-------
+ csv-uploader/config/initializers/devise.rb         |  3 +-
+ csv-uploader/config/routes.rb                      |  3 +-
+ .../migrate/20141124223405_add_columns_to_users.rb |  6 +++
+ csv-uploader/db/schema.rb                          |  4 +-
+ 17 files changed, 171 insertions(+), 64 deletions(-)
+ create mode 100644 csv-uploader/README.md
+ delete mode 100644 csv-uploader/README.rdoc
+ create mode 100644 csv-uploader/app/controllers/callbacks_controller.rb
+ create mode 100644 csv-uploader/db/migrate/20141124223405_add_columns_to_users.rb
+
+diff --git a/csv-uploader/.gitignore b/csv-uploader/.gitignore
+index 6a502e9..f0b75a1 100644
+--- a/csv-uploader/.gitignore
++++ b/csv-uploader/.gitignore
+@@ -14,3 +14,4 @@
+ # Ignore all logfiles and tempfiles.
+ /log/*.log
+ /tmp
++.env
+diff --git a/csv-uploader/Gemfile b/csv-uploader/Gemfile
+index 45a149b..810c45c 100644
+--- a/csv-uploader/Gemfile
++++ b/csv-uploader/Gemfile
+@@ -12,6 +12,9 @@ gem 'turbolinks'
+ gem 'pry'
+ gem 'smarter_csv'
+ gem 'devise'
++gem 'therubyracer'
++gem 'omniauth'
++gem 'omniauth-github'
+ 
+ group :development do
+   gem 'better_errors'
+@@ -21,6 +24,7 @@ end
+ 
+ group :test, :development do
+   gem 'rspec-rails'
++  gem 'dotenv-rails'
+ end
+ 
+ group :test do
+diff --git a/csv-uploader/Gemfile.lock b/csv-uploader/Gemfile.lock
+index 838cbee..e8d2a29 100644
+--- a/csv-uploader/Gemfile.lock
++++ b/csv-uploader/Gemfile.lock
+@@ -55,20 +55,49 @@ GEM
+       thread_safe (~> 0.1)
+       warden (~> 1.2.3)
+     diff-lcs (1.2.5)
++    dotenv (0.11.1)
++      dotenv-deployment (~> 0.0.2)
++    dotenv-deployment (0.0.2)
++    dotenv-rails (0.11.1)
++      dotenv (= 0.11.1)
+     erubis (2.7.0)
+     execjs (2.2.2)
++    faraday (0.9.0)
++      multipart-post (>= 1.2, < 3)
++    hashie (3.3.1)
+     hike (1.2.3)
+     i18n (0.6.11)
+     jquery-rails (3.1.2)
+       railties (>= 3.0, < 5.0)
+       thor (>= 0.14, < 2.0)
+     json (1.8.1)
++    jwt (1.2.0)
++    libv8 (3.16.14.7)
+     mail (2.6.3)
+       mime-types (>= 1.16, < 3)
+     method_source (0.8.2)
+     mime-types (2.4.3)
+     minitest (5.4.3)
+     multi_json (1.10.1)
++    multi_xml (0.5.5)
++    multipart-post (2.0.0)
++    oauth2 (1.0.0)
++      faraday (>= 0.8, < 0.10)
++      jwt (~> 1.0)
++      multi_json (~> 1.3)
++      multi_xml (~> 0.5)
++      rack (~> 1.2)
++    omniauth (1.2.2)
++      hashie (>= 1.2, < 4)
++      rack (~> 1.0)
++    omniauth-github (1.1.2)
++      omniauth (~> 1.0)
++      omniauth-oauth2 (~> 1.1)
++    omniauth-oauth2 (1.2.0)
++      faraday (>= 0.8, < 0.10)
++      multi_json (~> 1.3)
++      oauth2 (~> 1.0)
++      omniauth (~> 1.2)
+     orm_adapter (0.5.0)
+     pg (0.17.1)
+     pry (0.10.1)
+@@ -96,6 +125,7 @@ GEM
+       rake (>= 0.8.7)
+       thor (>= 0.18.1, < 2.0)
+     rake (10.3.2)
++    ref (1.0.5)
+     responders (1.1.1)
+       railties (>= 3.2, < 4.2)
+     rspec-core (3.1.5)
+@@ -133,6 +163,9 @@ GEM
+       actionpack (>= 3.0)
+       activesupport (>= 3.0)
+       sprockets (>= 2.8, < 4.0)
++    therubyracer (0.12.1)
++      libv8 (~> 3.16.14.0)
++      ref
+     thor (0.19.1)
+     thread_safe (0.3.4)
+     tilt (1.4.1)
+@@ -155,7 +188,10 @@ DEPENDENCIES
+   bootstrap-sass
+   coffee-rails
+   devise
++  dotenv-rails
+   jquery-rails
++  omniauth
++  omniauth-github
+   pg
+   pry
+   quiet_assets
+@@ -165,5 +201,6 @@ DEPENDENCIES
+   shoulda-matchers
+   smarter_csv
+   sprockets
++  therubyracer
+   turbolinks
+   uglifier
+diff --git a/csv-uploader/README.md b/csv-uploader/README.md
+new file mode 100644
+index 0000000..9b476d8
+--- /dev/null
++++ b/csv-uploader/README.md
+@@ -0,0 +1,47 @@
++CSVuploader
++===========
++
++##About the project
++CSVuploader is a project written in Ruby on Rails and completed for the Renewable Funding code challenge. The project lets users upload csv files and store their data in the database. After uploading a file, the total amount of gross revenue represented by the uploaded file will be displayed in the table. Users can log in with their emails and passwords or through their github accounts. Non-logged in users don't have access to upload files and will be asked to log in or sign up during a session.
++
++
++##Setup
++1. Extract .zip file
++2. In terminal open up csv-uploader folder that is inside of extracted folder
++3. Run bundle to install all the needed gems:
++
++  ```console
++  $ bundle install
++  ```
++
++4. Set up the databases for development and testing environment:
++
++  ```console
++  $ rake db:create db:migrate
++  ```
++
++5. In order to implement authentication with Github we need to register our app first:
++ 1. Log in to your Github account and go to settings.
++ 2. Click on __Applications__ tab.
++ 3. Type in any name you'd like into __Application name__ field.
++ 4. Copy paste __http://localhost:3000__ into __Homepage URL__ field.
++ 5. You can skip __Application description__.
++ 6. Copy and paste __http://127.0.0.1:3000/__ into __Authorization callback URL__.
++ 7. Finish registering your application by clicking on __Register application__ button.
++
++6. Now you can see generated CLied ID (example: 6000b5970l70f33caf6c) and Client Secret (example: 04591412l7a05acebab819284d96653d4ff16ba2).
++7. Create .env file in the root folder and set environmental variables like this:
++  example: __GITHUB_ID=82b157689td780be6d35__
++  example: __GITHUB_SECRET=b91f4cc478h4ftyu7893ac6bf94254337df4e71bc__
++8. Don't forget to ignore your .env file in .gitignore
++9. Start your local rails server:
++
++```console
++$ rails s
++```
++10. Go to http://localhost:3000 in a browser
++11. Play around and have fun!
++
++
++## Author
++Sergii Mertsalov
+diff --git a/csv-uploader/README.rdoc b/csv-uploader/README.rdoc
+deleted file mode 100644
+index dd4e97e..0000000
+--- a/csv-uploader/README.rdoc
++++ /dev/null
+@@ -1,28 +0,0 @@
+-== README
+-
+-This README would normally document whatever steps are necessary to get the
+-application up and running.
+-
+-Things you may want to cover:
+-
+-* Ruby version
+-
+-* System dependencies
+-
+-* Configuration
+-
+-* Database creation
+-
+-* Database initialization
+-
+-* How to run the test suite
+-
+-* Services (job queues, cache servers, search engines, etc.)
+-
+-* Deployment instructions
+-
+-* ...
+-
+-
+-Please feel free to use a different markup language if you do not plan to run
+-<tt>rake doc:app</tt>.
+diff --git a/csv-uploader/app/assets/stylesheets/custom.css.scss b/csv-uploader/app/assets/stylesheets/custom.css.scss
+index 744bbb7..9887b9c 100644
+--- a/csv-uploader/app/assets/stylesheets/custom.css.scss
++++ b/csv-uploader/app/assets/stylesheets/custom.css.scss
+@@ -54,5 +54,15 @@ body {
+ 
+   #upload-wrapper {
+   display: inline-block;
+-  margin-top: 10%;
++  margin-top: 3%;
+ }
++
++  #github-auth {
++    display: inline-block;
++    margin-left: 15px;
++  }
++
++  #logout-link {
++    display: inline-block;
++    margin-left: 15px;
++  }
+diff --git a/csv-uploader/app/controllers/application_controller.rb b/csv-uploader/app/controllers/application_controller.rb
+index d83690e..6a1af05 100644
+--- a/csv-uploader/app/controllers/application_controller.rb
++++ b/csv-uploader/app/controllers/application_controller.rb
+@@ -2,4 +2,5 @@ class ApplicationController < ActionController::Base
+   # Prevent CSRF attacks by raising an exception.
+   # For APIs, you may want to use :null_session instead.
+   protect_from_forgery with: :exception
++  before_action :authenticate_user!
+ end
+diff --git a/csv-uploader/app/controllers/callbacks_controller.rb b/csv-uploader/app/controllers/callbacks_controller.rb
+new file mode 100644
+index 0000000..3e3940b
+--- /dev/null
++++ b/csv-uploader/app/controllers/callbacks_controller.rb
+@@ -0,0 +1,6 @@
++class CallbacksController < Devise::OmniauthCallbacksController
++  def github
++    @user = User.from_omniauth(request.env["omniauth.auth"])
++    sign_in_and_redirect @user
++  end
++end
+diff --git a/csv-uploader/app/controllers/purchases_controller.rb b/csv-uploader/app/controllers/purchases_controller.rb
+index 2786923..4cd2313 100644
+--- a/csv-uploader/app/controllers/purchases_controller.rb
++++ b/csv-uploader/app/controllers/purchases_controller.rb
+@@ -7,13 +7,4 @@ class PurchasesController < ApplicationController
+     @purchase = Purchase.import(params[:file])
+     redirect_to root_url, notice: "File uploaded."
+   end
+-
+-private
+-
+-  def purchase_params
+-    params.require(:purchase).permit(:purchaser_name, :item_description,
+-                                     :item_price, :purchase_count,
+-                                     :merchant_address, :merchant_name,
+-                                     :document_id)
+-  end
+ end
+diff --git a/csv-uploader/app/models/user.rb b/csv-uploader/app/models/user.rb
+index c822027..58caee8 100644
+--- a/csv-uploader/app/models/user.rb
++++ b/csv-uploader/app/models/user.rb
+@@ -2,5 +2,15 @@ class User < ActiveRecord::Base
+   # Include default devise modules. Others available are:
+   # :confirmable, :lockable, :timeoutable and :omniauthable
+   devise :database_authenticatable, :registerable,
+-         :recoverable, :rememberable, :trackable, :validatable
++         :recoverable, :rememberable, :trackable, :validatable,
++         :omniauthable, :omniauth_providers => [:github]
++
++  def self.from_omniauth(auth)
++    where(provider: auth.provider, uid: auth.uid.to_s).first_or_create do |user|
++      user.provider = auth.provider
++      user.uid = auth.uid
++      user.email = auth.info.email
++      user.password = Devise.friendly_token[0,20]
++    end
++  end
+ end
+diff --git a/csv-uploader/app/views/devise/shared/_links.html.erb b/csv-uploader/app/views/devise/shared/_links.html.erb
+index 07e4291..b0375bb 100644
+--- a/csv-uploader/app/views/devise/shared/_links.html.erb
++++ b/csv-uploader/app/views/devise/shared/_links.html.erb
+@@ -22,8 +22,8 @@
+   <%= link_to "Didn't receive unlock instructions?", new_unlock_path(resource_name) %><br />
+ <% end -%>
+ 
+-<%- if devise_mapping.omniauthable? %>
+-  <%- resource_class.omniauth_providers.each do |provider| %>
+-    <%= link_to "Sign in with #{provider.to_s.titleize}", omniauth_authorize_path(resource_name, provider) %><br />
+-  <% end -%>
+-<% end -%>
++<%#- if devise_mapping.omniauthable? %>
++  <%#- resource_class.omniauth_providers.each do |provider| %>
++    <%#= link_to "Sign in with #{provider.to_s.titleize}", omniauth_authorize_path(resource_name, provider) %><br />
++  <%# end -%>
++<%# end -%>
+diff --git a/csv-uploader/app/views/layouts/application.html.erb b/csv-uploader/app/views/layouts/application.html.erb
+index 48db4ec..2edb45a 100644
+--- a/csv-uploader/app/views/layouts/application.html.erb
++++ b/csv-uploader/app/views/layouts/application.html.erb
+@@ -15,12 +15,13 @@
+           <div class="col-xs-6 col-sm-6 col-md-5" id="guest-links">
+             Logged in as <strong><%= current_user.email %></strong>
+             <%= link_to 'Edit profile', edit_user_registration_path, class: "all-links"%>
+-            <%= link_to "Log Out", destroy_user_session_path, method: :delete, class: "all-links"%>
++            <%= link_to "Log Out", destroy_user_session_path, method: :delete, class: "all-links", id: "logout-link" %>
+           </div>
+         <% else %>
+-          <div class="col-xs-6 col-sm-4 col-md-3" id="guest-links">
++          <div class="col-xs-6 col-sm-5 col-md-5" id="guest-links">
+             <%= link_to "Sign Up", new_user_registration_path, class: "all-links" %>
+             <%= link_to "Log In", new_user_session_path, class: "all-links" %>
++            <%= link_to "Sign in with Github", user_omniauth_authorize_path(:github), class: "all-links", id: "github-auth" %>
+           </div>
+         <% end %>
+       </div>
+diff --git a/csv-uploader/app/views/purchases/index.html.erb b/csv-uploader/app/views/purchases/index.html.erb
+index 66eebae..f6f99fd 100644
+--- a/csv-uploader/app/views/purchases/index.html.erb
++++ b/csv-uploader/app/views/purchases/index.html.erb
+@@ -1,16 +1,33 @@
+-<div class="col-xs-12">
+-  <h1 class="text-uppercase text-center">Upload CSV file</h1>
+-</div>
+-<% @documents.each do |doc| %>
+-  <%= doc.document_name %>
+-  $<%= doc.gross_revenue_by_document %>
+-<% end %>
+-
+-<%= form_tag upload_purchases_path, multipart: true do %>
+-<div class="col-xs-offset-3 col-xs-6 col-xs-offset-3 col-sm-offset-4 col-sm-4 col-sm-offset-4" id="upload-wrapper">
+-  <%= file_field_tag :file, id: 'file-filed' %>
+-</div>
+-<div class="col-xs-12 text-center">
+-  <%= submit_tag "Upload", class: "btn", id: "main-search-btn" %>
+-</div>
++<% if user_signed_in? %>
++  <div class="container">
++    <div class="col-xs-12">
++      <h1 class="text-uppercase text-center">Upload CSV file</h1>
++    </div>
++    <table class="table table-hover">
++      <thead>
++        <tr>
++          <th>File name</th>
++          <th>Gross</th>
++        </tr>
++      </thead>
++      <% @documents.each do |doc| %>
++        <tbody>
++          <tr>
++            <td><%= doc.document_name %></td>
++            <td>$<%= doc.gross_revenue_by_document %></td>
++          </tr>
++        </tbody>
++      <% end %>
++    </table>
++    <%= form_tag upload_purchases_path, multipart: true do %>
++    <div class="col-xs-offset-3 col-xs-6 col-xs-offset-3 col-sm-offset-4 col-sm-4 col-sm-offset-4" id="upload-wrapper">
++      <%= file_field_tag :file, id: 'file-filed' %>
++    </div>
++    <div class="col-xs-12 text-center">
++      <%= submit_tag "Upload", class: "btn", id: "main-search-btn" %>
++    </div>
++    <% end %>
++<% else %>
++  <h2 class="text-uppercase text-center">Upload your CSV files effortlesly</h2>
++  </div>
+ <% end %>
+diff --git a/csv-uploader/config/initializers/devise.rb b/csv-uploader/config/initializers/devise.rb
+index de500b4..0ebf2c5 100644
+--- a/csv-uploader/config/initializers/devise.rb
++++ b/csv-uploader/config/initializers/devise.rb
+@@ -10,7 +10,7 @@ Devise.setup do |config|
+   # Configure the e-mail address which will be shown in Devise::Mailer,
+   # note that it will be overwritten if you use your own mailer class
+   # with default "from" parameter.
+-  config.mailer_sender = 'please-change-me-at-config-initializers-devise@example.com'
++  config.mailer_sender = 'mailer@example.com'
+ 
+   # Configure the class responsible to send e-mails.
+   # config.mailer = 'Devise::Mailer'
+@@ -233,6 +233,7 @@ Devise.setup do |config|
+   # Add a new OmniAuth provider. Check the wiki for more information on setting
+   # up on your models and hooks.
+   # config.omniauth :github, 'APP_ID', 'APP_SECRET', scope: 'user,public_repo'
++  config.omniauth :github, ENV["GITHUB_ID"], ENV["GITHUB_SECRET"]
+ 
+   # ==> Warden configuration
+   # If you want to use other strategies, that are not supported by Devise, or
+diff --git a/csv-uploader/config/routes.rb b/csv-uploader/config/routes.rb
+index 61dbeca..427b025 100644
+--- a/csv-uploader/config/routes.rb
++++ b/csv-uploader/config/routes.rb
+@@ -1,5 +1,6 @@
+ Rails.application.routes.draw do
+-  devise_for :users, :path => 'accounts', path_names: {sign_in: "login", sign_out: "logout"}
++  devise_for :users, :controllers => { :omniauth_callbacks => "callbacks" },
++             :path => 'accounts', path_names: {sign_in: "login", sign_out: "logout"}
+   root to: "purchases#index"
+   resources :purchases do
+     collection { post :upload }
+diff --git a/csv-uploader/db/migrate/20141124223405_add_columns_to_users.rb b/csv-uploader/db/migrate/20141124223405_add_columns_to_users.rb
+new file mode 100644
+index 0000000..dec83f6
+--- /dev/null
++++ b/csv-uploader/db/migrate/20141124223405_add_columns_to_users.rb
+@@ -0,0 +1,6 @@
++class AddColumnsToUsers < ActiveRecord::Migration
++  def change
++    add_column :users, :provider, :string
++    add_column :users, :uid, :string
++  end
++end
+diff --git a/csv-uploader/db/schema.rb b/csv-uploader/db/schema.rb
+index 05c1c13..767ee9b 100644
+--- a/csv-uploader/db/schema.rb
++++ b/csv-uploader/db/schema.rb
+@@ -11,7 +11,7 @@
+ #
+ # It's strongly recommended that you check this file into your version control system.
+ 
+-ActiveRecord::Schema.define(version: 20141124190255) do
++ActiveRecord::Schema.define(version: 20141124223405) do
+ 
+   # These are extensions that must be enabled in order to support this database
+   enable_extension "plpgsql"
+@@ -45,6 +45,8 @@ ActiveRecord::Schema.define(version: 20141124190255) do
+     t.inet     "last_sign_in_ip"
+     t.datetime "created_at"
+     t.datetime "updated_at"
++    t.string   "provider"
++    t.string   "uid"
+   end
+ 
+   add_index "users", ["email"], name: "index_users_on_email", unique: true, using: :btree
+-- 
+1.8.5.2 (Apple Git-48)
+

@@ -1,0 +1,7 @@
+development:
+  adapter: postgresql
+  database: csv-uploader_development
+
+test:
+  adapter: postgresql
+  database: csv-uploader_test

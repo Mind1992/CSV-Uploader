@@ -1,0 +1,25 @@
+From 057117e3e4f05464a775fa225c8beec1735bef22 Mon Sep 17 00:00:00 2001
+From: Sergii Mertsalov <sergmerts@gmail.com>
+Date: Mon, 24 Nov 2014 18:47:03 -0800
+Subject: [PATCH 8/8] update README
+
+---
+ csv-uploader/README.md | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/csv-uploader/README.md b/csv-uploader/README.md
+index 9b476d8..bc9b799 100644
+--- a/csv-uploader/README.md
++++ b/csv-uploader/README.md
+@@ -40,7 +40,7 @@ CSVuploader is a project written in Ruby on Rails and completed for the Renewabl
+ $ rails s
+ ```
+ 10. Go to http://localhost:3000 in a browser
+-11. Play around and have fun!
++11. Play around with the app and have fun!
+ 
+ 
+ ## Author
+-- 
+1.8.5.2 (Apple Git-48)
+

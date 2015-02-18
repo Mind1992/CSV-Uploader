@@ -1,0 +1,187 @@
+From eaf03a5fa32a2ab8a9ef3196b5498a083a6e4997 Mon Sep 17 00:00:00 2001
+From: Sergii Mertsalov <sergmerts@gmail.com>
+Date: Sun, 23 Nov 2014 12:25:21 -0800
+Subject: [PATCH 3/8] store csv files' data in the database after uploading
+
+---
+ .../app/controllers/purchases_controller.rb        | 10 ++++
+ csv-uploader/app/models/purchase.rb                |  8 +++
+ csv-uploader/app/views/purchases/index.html.erb    |  6 +++
+ csv-uploader/config/application.rb                 |  1 +
+ csv-uploader/config/routes.rb                      | 59 ++--------------------
+ .../migrate/20141123200641_change_columns_names.rb | 10 ++++
+ csv-uploader/db/schema.rb                          | 14 ++---
+ 7 files changed, 47 insertions(+), 61 deletions(-)
+ create mode 100644 csv-uploader/app/controllers/purchases_controller.rb
+ create mode 100644 csv-uploader/app/models/purchase.rb
+ create mode 100644 csv-uploader/app/views/purchases/index.html.erb
+ create mode 100644 csv-uploader/db/migrate/20141123200641_change_columns_names.rb
+
+diff --git a/csv-uploader/app/controllers/purchases_controller.rb b/csv-uploader/app/controllers/purchases_controller.rb
+new file mode 100644
+index 0000000..880f2c1
+--- /dev/null
++++ b/csv-uploader/app/controllers/purchases_controller.rb
+@@ -0,0 +1,10 @@
++class PurchasesController < ApplicationController
++  def index
++
++  end
++
++  def upload
++    Purchase.import(params[:file])
++    redirect_to root_url, notice: "File uploaded."
++  end
++end
+diff --git a/csv-uploader/app/models/purchase.rb b/csv-uploader/app/models/purchase.rb
+new file mode 100644
+index 0000000..c9acd40
+--- /dev/null
++++ b/csv-uploader/app/models/purchase.rb
+@@ -0,0 +1,8 @@
++class Purchase < ActiveRecord::Base
++
++  def self.import(file)
++    CSV.foreach(file.path, headers: true) do |row|
++      Purchase.create! row.to_hash
++    end
++  end
++end
+diff --git a/csv-uploader/app/views/purchases/index.html.erb b/csv-uploader/app/views/purchases/index.html.erb
+new file mode 100644
+index 0000000..bdb6fe5
+--- /dev/null
++++ b/csv-uploader/app/views/purchases/index.html.erb
+@@ -0,0 +1,6 @@
++<h2>Upload CSV file</h2>
++
++<%= form_tag upload_purchases_path, multipart: true do %>
++  <%= file_field_tag :file %>
++  <%= submit_tag "Upload" %>
++<% end %>
+diff --git a/csv-uploader/config/application.rb b/csv-uploader/config/application.rb
+index 482540c..050be50 100644
+--- a/csv-uploader/config/application.rb
++++ b/csv-uploader/config/application.rb
+@@ -1,5 +1,6 @@
+ require File.expand_path('../boot', __FILE__)
+ 
++require 'csv'
+ # Pick the frameworks you want:
+ require "active_model/railtie"
+ require "active_record/railtie"
+diff --git a/csv-uploader/config/routes.rb b/csv-uploader/config/routes.rb
+index 3f66539..639e825 100644
+--- a/csv-uploader/config/routes.rb
++++ b/csv-uploader/config/routes.rb
+@@ -1,56 +1,7 @@
+ Rails.application.routes.draw do
+-  # The priority is based upon order of creation: first created -> highest priority.
+-  # See how all your routes lay out with "rake routes".
+-
+-  # You can have the root of your site routed with "root"
+-  # root 'welcome#index'
+-
+-  # Example of regular route:
+-  #   get 'products/:id' => 'catalog#view'
+-
+-  # Example of named route that can be invoked with purchase_url(id: product.id)
+-  #   get 'products/:id/purchase' => 'catalog#purchase', as: :purchase
+-
+-  # Example resource route (maps HTTP verbs to controller actions automatically):
+-  #   resources :products
+-
+-  # Example resource route with options:
+-  #   resources :products do
+-  #     member do
+-  #       get 'short'
+-  #       post 'toggle'
+-  #     end
+-  #
+-  #     collection do
+-  #       get 'sold'
+-  #     end
+-  #   end
+-
+-  # Example resource route with sub-resources:
+-  #   resources :products do
+-  #     resources :comments, :sales
+-  #     resource :seller
+-  #   end
+-
+-  # Example resource route with more complex sub-resources:
+-  #   resources :products do
+-  #     resources :comments
+-  #     resources :sales do
+-  #       get 'recent', on: :collection
+-  #     end
+-  #   end
+-
+-  # Example resource route with concerns:
+-  #   concern :toggleable do
+-  #     post 'toggle'
+-  #   end
+-  #   resources :posts, concerns: :toggleable
+-  #   resources :photos, concerns: :toggleable
+-
+-  # Example resource route within a namespace:
+-  #   namespace :admin do
+-  #     # Directs /admin/products/* to Admin::ProductsController
+-  #     # (app/controllers/admin/products_controller.rb)
+-  #     resources :products
+-  #   end
++  root to: "purchases#index"
++  resources :purchases do
++    collection { post :upload }
++  end
+ end
++
+diff --git a/csv-uploader/db/migrate/20141123200641_change_columns_names.rb b/csv-uploader/db/migrate/20141123200641_change_columns_names.rb
+new file mode 100644
+index 0000000..c458eae
+--- /dev/null
++++ b/csv-uploader/db/migrate/20141123200641_change_columns_names.rb
+@@ -0,0 +1,10 @@
++class ChangeColumnsNames < ActiveRecord::Migration
++  def change
++    rename_column :purchases, :purchaser_name, "purchaser name"
++    rename_column :purchases, :item_description, "item description"
++    rename_column :purchases, :item_price, "item price"
++    rename_column :purchases, :purchase_count, "purchase count"
++    rename_column :purchases, :merchant_address, "merchant address"
++    rename_column :purchases, :merchant_name, "merchant name"
++  end
++end
+diff --git a/csv-uploader/db/schema.rb b/csv-uploader/db/schema.rb
+index d385fbd..014f6ae 100644
+--- a/csv-uploader/db/schema.rb
++++ b/csv-uploader/db/schema.rb
+@@ -11,18 +11,18 @@
+ #
+ # It's strongly recommended that you check this file into your version control system.
+ 
+-ActiveRecord::Schema.define(version: 20141123190359) do
++ActiveRecord::Schema.define(version: 20141123200641) do
+ 
+   # These are extensions that must be enabled in order to support this database
+   enable_extension "plpgsql"
+ 
+   create_table "purchases", force: true do |t|
+-    t.string   "purchaser_name"
+-    t.string   "item_description"
+-    t.decimal  "item_price"
+-    t.integer  "purchase_count"
+-    t.string   "merchant_address"
+-    t.string   "merchant_name"
++    t.string   "purchaser name"
++    t.string   "item description"
++    t.decimal  "item price"
++    t.integer  "purchase count"
++    t.string   "merchant address"
++    t.string   "merchant name"
+     t.datetime "created_at"
+     t.datetime "updated_at"
+   end
+-- 
+1.8.5.2 (Apple Git-48)
+
